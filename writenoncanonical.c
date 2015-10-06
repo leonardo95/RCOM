@@ -99,9 +99,8 @@ int main(int argc, char** argv)
     O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar 
     o indicado no guião 
   */
-	char *ret;
-	read(fd,&ret,strlen(buf+1));
-	printf("%s\n", &ret); 
+	read(fd,buf,strlen(buf)+1);
+	printf("%s\n", buf); 
 
 
 

@@ -20,8 +20,10 @@ int main(int argc, char** argv)
 {
     int fd, res;
     struct termios oldtio,newtio;
-    unsigned char buf;
-
+    char buf;
+    char *word;
+	word= (char *)malloc(255);
+	strcpy(word,"");
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
   	      (strcmp("/dev/ttyS4", argv[1])!=0) )) {
@@ -76,6 +78,7 @@ int main(int argc, char** argv)
 	
     while (STOP==FALSE) {       /* loop for input */
       res = read(fd,&buf,1);   /* returns after 5 chars have been input */
+	
       	if (res != 1)
 	{
 		printf("Error reading from the serial port.\n");
@@ -85,14 +88,17 @@ int main(int argc, char** argv)
 	{
 	STOP=TRUE;
 	}
-      	 printf("%c", buf);
+	
+char newstr[2]; newstr[1] = '\0'; newstr[0] = buf;
+	strcat(word, newstr);
+
 	
     }
-	printf("\n");
-	
-	
-//write(fd,&buf,strlen(&buf+1));
-//	sleep(2);
+	sleep(1);	
+	printf("%s\n", word);
+
+	write(fd,word,strlen(word));
+	sleep(1);
 	
 
   /* 
