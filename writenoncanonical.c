@@ -15,6 +15,11 @@
 #define FALSE 0
 #define TRUE 1
 
+#define FLAG 0x7E
+#define C 0x07
+#define A 0x03
+#define BCC 0x03^0x07
+
 volatile int STOP=FALSE;
 
 int main(int argc, char** argv)
@@ -23,7 +28,12 @@ int main(int argc, char** argv)
     struct termios oldtio,newtio;
     char buf[255];
     int i, sum = 0, speed = 0;
-    
+    char set[5];
+    set[0] = FLAG;
+    set[1] = A;
+    set[2] = C;
+    set[3] = BCC;
+    set[4] = FLAG;
     if ( (argc < 2) || 
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
   	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
@@ -76,35 +86,45 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 
-/*
-    for (i = 0; i < sizeof(argv[2]); i++) {
-      buf[i] = argv[2][i];
-    }
-*/
 
+	/*
 	printf("String: ");
 	gets(buf);
-
-    /*testing*/
-   // buf[25] = '\n';
+	*/
 
 
   
-    res = write(fd,buf,strlen(buf)+1);   
+
+
+  
+    res = write(fd,set,strlen(set));   
     printf("%d bytes written\n", res);
  
-	sleep(1);
+	
 
   /* 
     O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar 
     o indicado no guião 
-  */
+  */	 
+	/*
 	read(fd,buf,strlen(buf)+1);
 	printf("%s\n", buf); 
+	*/
+	char ua;
+	i=0;
+	while(i<5){
+	 res= read(fd, &ua, 1);
+	 if(res != 1){
+		printf("Error reading from the serial port");
+		break;
+	 }
+	  printf("%x\n", ua);
+	  i++;
+	}
 
 
+   sleep(1);
 
-   
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);

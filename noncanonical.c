@@ -14,14 +14,27 @@
 #define FALSE 0
 #define TRUE 1
 
+#define FLAG 0x7E
+#define A 0x01
+#define C 0x03
+#define BCC 0x01^0x03
+
 volatile int STOP=FALSE;
 
 int main(int argc, char** argv)
 {
     int fd, res;
     struct termios oldtio,newtio;
-    char buf;
+    //char buf;
     char *word;
+    char UA[5];
+    char SET;
+
+	UA[0]=FLAG;
+	UA[1]=A;
+	UA[2]=C;
+	UA[3]=BCC;
+	UA[4]=FLAG;
 	word= (char *)malloc(255);
 	strcpy(word,"");
     if ( (argc < 2) || 
@@ -74,31 +87,52 @@ int main(int argc, char** argv)
     }
 
     printf("New termios structure set\n");
-
+ 	
+   
+/*
+     while (STOP==FALSE) 
+	{       // loop for input 
+      		res = read(fd,&buf,1);   // returns after 5 chars have been input 
 	
-    while (STOP==FALSE) {       /* loop for input */
-      res = read(fd,&buf,1);   /* returns after 5 chars have been input */
-	
-      	if (res != 1)
-	{
-		printf("Error reading from the serial port.\n");
-		break;
+ 	     	if (res != 1)
+		{
+			printf("Error reading from the serial port.\n");
+			break;
+		}
+		if (buf=='\0') 
+		{
+		STOP=TRUE;
+		}
+		
+		char newstr[2]; newstr[1] = '\0'; newstr[0] = buf;
+		strcat(word, newstr);
+				
 	}
-	if (buf=='\0') 
-	{
-	STOP=TRUE;
-	}
-	
-char newstr[2]; newstr[1] = '\0'; newstr[0] = buf;
-	strcat(word, newstr);
 
-	
-    }
 	sleep(1);	
 	printf("%s\n", word);
 
 	write(fd,word,strlen(word));
 	sleep(1);
+
+*/
+	int i=0;
+	while(i<5)
+	{
+		res=read(fd,&SET,1);
+		if (res != 1)
+		{
+			printf("Error reading from the serial port.\n");
+			break;
+		}
+		printf("%x\n", SET);
+	i++;	
+	}
+	
+	write(fd,UA,strlen(UA));
+	sleep(1);
+
+	
 	
 
   /* 
