@@ -20,7 +20,107 @@
 #define A 0x03
 #define BCC 0x03^0x07
 
+
+typedef enum {
+	START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP_SM
+} State;
+
 volatile int STOP=FALSE;
+
+unsigned char* state_machine_UA(int fd){
+
+	char ua[5];
+	State state = START;
+	int end = FALSE;
+
+	while(!end){
+		unsigned char c;
+		
+		if(state != STOP_SM){
+			int res = read(fd, &c, 1);
+
+			if(res != 1){
+				printf("error reading: nothing received\n");
+			}
+		}
+
+		switch(state){
+
+		case START:
+			if(c == FLAG){
+				ua[0] = c;
+
+				state = FLAG_RCV;
+
+				
+			}
+			break;
+		case FLAG_RCV:
+			if(c == A){
+				ua[1] = c;
+
+				state = A_RCV;
+
+				
+			}else{
+				memset(ua,0,strlen(ua));
+				state = START;
+			}
+			break;
+		case A_RCV:
+			if(c == C){
+				ua[2] = c;
+
+				state = C_RCV;
+
+				
+			}else if(c == FLAG){
+				state= FLAG_RCV;
+			}else{
+				memset(ua,0,strlen(ua));
+				state = START;
+			}
+			break;
+		case C_RCV:
+			if(c == BCC){
+				ua[3] = c;
+
+				state = BCC_OK;
+
+				
+			}else if(c == FLAG){
+				state= FLAG_RCV;
+			}else{
+				memset(ua,0,strlen(ua));
+				state = START;
+			}	
+			break;
+
+		case BCC_OK:
+			if(c == FLAG){
+				ua[5] = c;
+				state = STOP_SM;
+
+				
+			}else{
+				memset(ua,0,strlen(ua));
+				state = START;
+			}
+			break;
+		case STOP_SM:
+			end=TRUE;
+			break;
+		}
+
+	}
+	int i=0;
+	for(i; i< strlen(ua); i++){
+
+		printf("%x\n", ua[i]);
+
+	}
+	
+}
 
 int main(int argc, char** argv)
 {
@@ -110,17 +210,8 @@ int main(int argc, char** argv)
 	read(fd,buf,strlen(buf)+1);
 	printf("%s\n", buf); 
 	*/
-	char ua;
-	i=0;
-	while(i<5){
-	 res= read(fd, &ua, 1);
-	 if(res != 1){
-		printf("Error reading from the serial port");
-		break;
-	 }
-	  printf("%x\n", ua);
-	  i++;
-	}
+	char* ua = state_machine_UA(fd); 
+	
 
 
    sleep(1);
