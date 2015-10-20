@@ -13,10 +13,14 @@
 #define FALSE 0
 #define TRUE 1
 #define FLAG 0x7E
-#define C 0x07
-#define A 0x03
-#define BCC 0x03^0x07
+#define C_SET 0x07
+#define A_SET 0x03
+#define BCC_SET (0x03^0x07)
+#define A_UA 0x01
+#define C_UA 0x03
+#define BCC_UA (0x01^0x03)
 
-char* set();
-unsigned char* state_machine_UA(int fd);
-void print_array(unsigned char* array);
+void set_function(char *set);
+void state_machine_ua(int fd, char* ua);
+void ua_function(char *ua);
+void state_machine_set(int fd, char* ua);

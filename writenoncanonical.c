@@ -8,12 +8,13 @@ volatile int STOP=FALSE;
 
 int main(int argc, char** argv)
 {
-    int fd,c, res;
+    int fd, res;
     struct termios oldtio,newtio;
-    char buf[255];
-    int i, sum = 0, speed = 0;
-    char* set;
+    char set[5];
+    char ua[5];
 
+    set_function(set); //A funcionar corretamente
+  
     if ((argc < 2) || ((strcmp("/dev/ttyS0", argv[1])!=0) && (strcmp("/dev/ttyS1", argv[1])!=0) )) 
     {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
     res = write(fd,set,strlen(set));   
     printf("%d bytes written\n", res);
  
-	char* ua = state_machine_UA(fd); 
+	state_machine_ua(fd, ua); 
 	sleep(1);
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) 
@@ -65,28 +66,33 @@ int main(int argc, char** argv)
     return 0;
 }
 
-char* set()
+void set_function(char *set)
 {
-	char set[5];
+	printf("set() -> initializing\n");
     set[0] = FLAG;
-    set[1] = A;
-    set[2] = C;
-    set[3] = BCC;
+    set[1] = A_SET;
+    set[2] = C_SET;
+    set[3] = BCC_SET;
     set[4] = FLAG;
-    return set;
+    printf("set() -> FLAG: %x\n", set[0]);
+    printf("set() -> A: %x\n", set[1]);
+    printf("set() -> C: %x\n", set[2]);
+    printf("set() -> BCC: %x\n", set[3]);
+    printf("set() -> FLAG: %x\n", set[4]);
+    printf("set() -> terminated\n");
 }
 
-unsigned char* state_machine_UA(int fd)
+void state_machine_ua(int fd, char* ua)
 {
-	char ua[5];
-	State state = START;
+	printf("state_machine_ua() -> initializing\n");
+	State state = STATE_MACHINE_START;
 	int end = FALSE;
 
 	while(!end)
 	{
 		unsigned char c;
 		
-		if(state != STOP_SM)
+		if(state != STATE_MACHINE_STOP)
 		{
 			int res = read(fd, &c, 1);
 
@@ -98,14 +104,14 @@ unsigned char* state_machine_UA(int fd)
 
 		switch(state)
 		{
-			case START:
+			case STATE_MACHINE_START:
 				if(c == FLAG)
 				{
 					ua[0] = c;
 					state = FLAG_RCV;
 				} break;
 			case FLAG_RCV:
-				if(c == A)
+				if(c == A_SET)
 				{
 					ua[1] = c;
 					state = A_RCV;
@@ -113,10 +119,10 @@ unsigned char* state_machine_UA(int fd)
 				else
 				{
 					memset(ua,0,strlen(ua));
-					state = START;
+					state = STATE_MACHINE_START;
 				} break;
 			case A_RCV:
-				if(c == C)
+				if(c == C_SET)
 				{
 					ua[2] = c;
 					state = C_RCV;		
@@ -128,10 +134,10 @@ unsigned char* state_machine_UA(int fd)
 				else
 				{
 					memset(ua,0,strlen(ua));
-					state = START;
+					state = STATE_MACHINE_START;
 				} break;
 			case C_RCV:
-				if(c == BCC)
+				if(c == BCC_SET)
 				{
 					ua[3] = c;
 					state = BCC_OK;
@@ -143,33 +149,21 @@ unsigned char* state_machine_UA(int fd)
 				else
 				{
 					memset(ua,0,strlen(ua));
-					state = START;
+					state = STATE_MACHINE_START;
 				} break;
 			case BCC_OK:
 				if(c == FLAG)
 				{
-					ua[5] = c;
-					state = STOP_SM;				
+					ua[4] = c;
+					state = STATE_MACHINE_STOP;				
 				}
 				else
 				{
 					memset(ua,0,strlen(ua));
-					state = START;
+					state = STATE_MACHINE_START;
 				} break;
-			case STOP_SM: end=TRUE; break;
+			case STATE_MACHINE_STOP: end=TRUE; break;
 		}
 	}
-
-	print_array(ua);
-	return ua;
-}
-
-void print_array(unsigned char* array)
-{
-	int i=0;
-	for(i; i< strlen(array); i++){
-
-		printf("%x\n", array[i]);
-
-	}
+	printf("state_machine_UA() -> terminated\n");
 }

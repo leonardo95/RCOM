@@ -1,23 +1,8 @@
-/*Non-Canonical Input Processing*/
+#include "project.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#define BAUDRATE B38400
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-
-#define FLAG 0x7E
-#define A 0x01
-#define C 0x03
-#define BCC 0x01^0x03
+typedef enum {
+  STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
+} State;
 
 volatile int STOP=FALSE;
 
@@ -25,36 +10,23 @@ int main(int argc, char** argv)
 {
     int fd, res;
     struct termios oldtio,newtio;
-    //char buf;
-    char *word;
-    char UA[5];
-    char SET;
+    char ua[5];
+    char set[5];
 
-	UA[0]=FLAG;
-	UA[1]=A;
-	UA[2]=C;
-	UA[3]=BCC;
-	UA[4]=FLAG;
-	word= (char *)malloc(255);
-	strcpy(word,"");
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS4", argv[1])!=0) )) {
+    ua_function(ua);
+
+    if ( (argc < 2) || ((strcmp("/dev/ttyS0", argv[1])!=0) && (strcmp("/dev/ttyS4", argv[1])!=0) )) 
+    {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
-
-
-  /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-  */
-  
-    
+ 
     fd = open(argv[1], O_RDWR | O_NOCTTY );
+    
     if (fd <0) {perror(argv[1]); exit(-1); }
 
-    if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
+    if ( tcgetattr(fd,&oldtio) == -1) 
+    {
       perror("tcgetattr");
       exit(-1);
     }
@@ -64,84 +36,131 @@ int main(int argc, char** argv)
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0;
 
-    /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 1 chars received */
-
-
-
-  /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) próximo(s) caracter(es)
-  */
-
-
+    newtio.c_cc[VTIME]    = 0; 
+    newtio.c_cc[VMIN]     = 1;
 
     tcflush(fd, TCIOFLUSH);
 
-    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
+    if ( tcsetattr(fd,TCSANOW,&newtio) == -1) 
+    {
       perror("tcsetattr");
       exit(-1);
     }
 
     printf("New termios structure set\n");
- 	
-   
-/*
-     while (STOP==FALSE) 
-	{       // loop for input 
-      		res = read(fd,&buf,1);   // returns after 5 chars have been input 
-	
- 	     	if (res != 1)
-		{
-			printf("Error reading from the serial port.\n");
-			break;
-		}
-		if (buf=='\0') 
-		{
-		STOP=TRUE;
-		}
-		
-		char newstr[2]; newstr[1] = '\0'; newstr[0] = buf;
-		strcat(word, newstr);
-				
-	}
-
-	sleep(1);	
-	printf("%s\n", word);
-
-	write(fd,word,strlen(word));
-	sleep(1);
-
-*/
-	int i=0;
-	while(i<5)
-	{
-		res=read(fd,&SET,1);
-		if (res != 1)
-		{
-			printf("Error reading from the serial port.\n");
-			break;
-		}
-		printf("%x\n", SET);
-	i++;	
-	}
-	
-	write(fd,UA,strlen(UA));
-	sleep(1);
 
 	
+	res=write(fd,ua,strlen(ua));
+  printf("%d bytes written\n", res);
 	
+  state_machine_set(fd, set);
+  sleep(1);
 
-  /* 
-    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião 
-  */
+  tcsetattr(fd,TCSANOW,&oldtio);
+  close(fd);
+  return 0;
+}
 
+void ua_function(char *ua)
+{
+  printf("ua() -> initializing\n");
+    ua[0] = FLAG;
+    ua[1] = A_UA;
+    ua[2] = C_UA;
+    ua[3] = BCC_UA;
+    ua[4] = FLAG;
+    printf("ua() -> FLAG: %x\n", ua[0]);
+    printf("ua() -> A: %x\n", ua[1]);
+    printf("ua() -> C: %x\n", ua[2]);
+    printf("ua() -> BCC: %x\n", ua[3]);
+    printf("ua() -> FLAG: %x\n", ua[4]);
+    printf("ua() -> terminated\n");
+}
 
+void state_machine_set(int fd, char* set)
+{
+  printf("state_machine_set() -> initializing\n");
+  State state = STATE_MACHINE_START;
+  int end = FALSE;
 
-    tcsetattr(fd,TCSANOW,&oldtio);
-    close(fd);
-    return 0;
+  while(!end)
+  {
+    unsigned char c;
+    
+    if(state != STATE_MACHINE_STOP)
+    {
+      int res = read(fd, &c, 1);
+
+      if(res != 1)
+      {
+        printf("error reading: nothing received\n");
+      }
+    }
+
+    switch(state)
+    {
+      case STATE_MACHINE_START:
+        if(c == FLAG)
+        {
+          set[0] = c;
+          state = FLAG_RCV;
+        } break;
+      case FLAG_RCV:
+        if(c == A_UA)
+        {
+          set[1] = c;
+          state = A_RCV;
+        }
+        else
+        {
+          memset(set,0,strlen(set));
+          state = STATE_MACHINE_START;
+        } break;
+      case A_RCV:
+        if(c == C_UA)
+        {
+          set[2] = c;
+          state = C_RCV;    
+        }
+        else if(c == FLAG)
+        {
+          state= FLAG_RCV;
+        }
+        else
+        {
+          memset(set,0,strlen(set));
+          state = STATE_MACHINE_START;
+        } break;
+      case C_RCV:
+        if(c == BCC_UA)
+        {
+          set[3] = c;
+          state = BCC_OK;
+        }
+        else if(c == FLAG)
+        {
+          state= FLAG_RCV;
+        }
+        else
+        {
+          memset(set,0,strlen(set));
+          state = STATE_MACHINE_START;
+        } break;
+      case BCC_OK:
+        if(c == FLAG)
+        {
+          set[4] = c;
+          state = STATE_MACHINE_STOP;       
+        }
+        else
+        {
+          memset(set,0,strlen(set));
+          state = STATE_MACHINE_START;
+        } break;
+      case STATE_MACHINE_STOP: end=TRUE; break;
+    }
+  }
+  printf("state_machine_set() -> terminated\n");
 }
