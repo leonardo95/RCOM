@@ -53,6 +53,19 @@ int main(int argc, char** argv)
     res = write(fd,set,strlen(set));   
     printf("%d bytes written\n", res);
  
+    int i=0;
+    while(i<5)
+   {
+     res=read(fd,ua,1);
+     if (res != 1)
+     {
+       printf("Error reading from the serial port.\n");
+       break;
+     }
+     printf("%x\n", ua[i]);
+      i++;  
+   }
+
 	state_machine_ua(fd, ua); 
 	sleep(1);
 

@@ -51,6 +51,18 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
+    int i=0;
+    while(i<5)
+   {
+     res=read(fd,set,1);
+     if (res != 1)
+     {
+       printf("Error reading from the serial port.\n");
+       break;
+     }
+     printf("%x\n", set[i]);
+      i++;  
+   }
 	
 	res=write(fd,ua,strlen(ua));
   printf("%d bytes written\n", res);
