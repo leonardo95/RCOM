@@ -24,10 +24,9 @@ typedef enum {
 	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
 } State;
 
-
-volatile int STOP=FALSE;
-
 void set_function(char *set);
 void state_machine_ua(int fd, char* ua);
 void ua_function(char *ua);
 void state_machine_set(int fd, char* ua);
+int reciever(int fd);
+int transmitter(int fd);
