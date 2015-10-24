@@ -1,11 +1,5 @@
 #include "project.h"
 
-typedef enum {
-	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
-} State;
-
-volatile int STOP=FALSE;
-
 int main(int argc, char** argv)
 {
     int fd, res;
@@ -13,7 +7,7 @@ int main(int argc, char** argv)
     char set[5];
     char ua[5];
 
-    set_function(set); //A funcionar corretamente
+    set_function(set);
   
     if ((argc < 2) || ((strcmp("/dev/ttyS0", argv[1])!=0) && (strcmp("/dev/ttyS1", argv[1])!=0) )) 
     {
@@ -52,19 +46,6 @@ int main(int argc, char** argv)
 
     res = write(fd,set,strlen(set));   
     printf("%d bytes written\n", res);
- 
-    int i=0;
-    while(i<5)
-   {
-     res=read(fd,ua,1);
-     if (res != 1)
-     {
-       printf("Error reading from the serial port.\n");
-       break;
-     }
-     printf("%x\n", ua[i]);
-      i++;  
-   }
 
 	state_machine_ua(fd, ua); 
 	sleep(1);
@@ -81,23 +62,19 @@ int main(int argc, char** argv)
 
 void set_function(char *set)
 {
-	printf("set() -> initializing\n");
+	printf("set_funtion -> initializing\n");
     set[0] = FLAG;
     set[1] = A_SET;
     set[2] = C_SET;
     set[3] = BCC_SET;
     set[4] = FLAG;
-    printf("set() -> FLAG: %x\n", set[0]);
-    printf("set() -> A: %x\n", set[1]);
-    printf("set() -> C: %x\n", set[2]);
-    printf("set() -> BCC: %x\n", set[3]);
-    printf("set() -> FLAG: %x\n", set[4]);
-    printf("set() -> terminated\n");
+    printf("set values: %x, %x, %x, %x, %x\n", set[0], set[1], set[2], set[3], set[4]);
+    printf("set_function -> terminated\n");
 }
 
 void state_machine_ua(int fd, char* ua)
 {
-	printf("state_machine_ua() -> initializing\n");
+	printf("state_machine_ua -> initializing\n");
 	State state = STATE_MACHINE_START;
 	int end = FALSE;
 
@@ -118,14 +95,18 @@ void state_machine_ua(int fd, char* ua)
 		switch(state)
 		{
 			case STATE_MACHINE_START:
+				printf("case: STATE_MACHINE_START\n");
 				if(c == FLAG)
 				{
+					printf("state: FLAG\n");
 					ua[0] = c;
 					state = FLAG_RCV;
 				} break;
 			case FLAG_RCV:
-				if(c == A_SET)
+				printf("case: FLAG_RCV\n");
+				if(c == A_UA)
 				{
+					printf("state: A\n");
 					ua[1] = c;
 					state = A_RCV;
 				}
@@ -135,13 +116,16 @@ void state_machine_ua(int fd, char* ua)
 					state = STATE_MACHINE_START;
 				} break;
 			case A_RCV:
-				if(c == C_SET)
+				printf("case: A_RCV\n");
+				if(c == C_UA)
 				{
+					printf("state: C\n");
 					ua[2] = c;
 					state = C_RCV;		
 				}
 				else if(c == FLAG)
 				{
+					printf("state: FLAG\n");
 					state= FLAG_RCV;
 				}
 				else
@@ -150,13 +134,16 @@ void state_machine_ua(int fd, char* ua)
 					state = STATE_MACHINE_START;
 				} break;
 			case C_RCV:
-				if(c == BCC_SET)
+				printf("case: C_RCV\n");
+				if(c == BCC_UA)
 				{
+					printf("state: BBC\n");
 					ua[3] = c;
 					state = BCC_OK;
 				}
 				else if(c == FLAG)
 				{
+					
 					state= FLAG_RCV;
 				}
 				else
@@ -165,8 +152,10 @@ void state_machine_ua(int fd, char* ua)
 					state = STATE_MACHINE_START;
 				} break;
 			case BCC_OK:
+				printf("case: BCC_OK\n");
 				if(c == FLAG)
 				{
+					printf("state: FLAG\n");
 					ua[4] = c;
 					state = STATE_MACHINE_STOP;				
 				}
@@ -175,8 +164,12 @@ void state_machine_ua(int fd, char* ua)
 					memset(ua,0,strlen(ua));
 					state = STATE_MACHINE_START;
 				} break;
-			case STATE_MACHINE_STOP: end=TRUE; break;
+			case STATE_MACHINE_STOP:
+			 end=TRUE;
+			 printf("state: STATE_MACHINE_STOP\n");
+			 break;
+
 		}
 	}
-	printf("state_machine_UA() -> terminated\n");
+	printf("state_machine -> terminated\n");
 }

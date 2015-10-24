@@ -20,6 +20,13 @@
 #define C_UA 0x03
 #define BCC_UA (0x01^0x03)
 
+typedef enum {
+	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
+} State;
+
+
+volatile int STOP=FALSE;
+
 void set_function(char *set);
 void state_machine_ua(int fd, char* ua);
 void ua_function(char *ua);
