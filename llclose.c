@@ -1,19 +1,17 @@
 #include "project.h"
 
-int main(int argc, char** argv)
+int llclose(int fd, int type)
 {
   int res=0;
   
-  if (argc < 2) 
+  if(type==0)
   {
-      printf("Invalid arguments for function llclose\n");
-      exit(1);
-  }
-  
-  int fd=atoi(argv[1]);
-    
   res=llclose_transmitter(fd); 
-  
+  }
+  else if(type==1)
+  {
+    res=llclose_reciever(fd);
+  }
   return res;
 }
 

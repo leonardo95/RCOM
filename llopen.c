@@ -5,9 +5,9 @@ int llopen(int port_num, int flag)
   char port[255];
   struct termios oldtio,newtio;
   int fd, ret=0;
-   char port_number[255];
+  char port_number[255];
    
-   sprintf(port_number, "%d", port_num);
+  sprintf(port_number, "%d", port_num);
   strcpy(port, "/dev/ttyS");
   strcat(port, port_number);
   printf("%s\n", port);
