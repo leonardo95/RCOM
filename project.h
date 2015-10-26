@@ -29,6 +29,7 @@
 #define FASE_2 2
 #define FASE_3 3
 #define FINISH 4
+<<<<<<< HEAD
 #define TRANSMITER 1
 #define RECEIVER 0
 
@@ -45,6 +46,8 @@
 #define ISREPLY(c) (c == C_UA || IS_RR(c) || IS_REJ(c) )
 
 #define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x03 : 0x01) : ( ISREPLY(c)? 0x03 : 0x01)
+=======
+>>>>>>> origin/master
 
 typedef enum {
 	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP

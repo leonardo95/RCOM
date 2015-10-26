@@ -1,5 +1,6 @@
 #include "project.h"
 
+<<<<<<< HEAD
 
 int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize){
 
@@ -77,6 +78,8 @@ int check_frame(char* frame, int framesize, int role, int frame_nr){
   return 0;
 }
 
+=======
+>>>>>>> origin/master
 int llwrite(int fd, char* buffer, int length)
 {
   int res=0, transffer=1, transmittion=0;
@@ -87,9 +90,15 @@ int llwrite(int fd, char* buffer, int length)
     {
       if(transmittion >= link_layer->numTransmissions)
       {
+<<<<<<< HEAD
 	       printf("Unable to send information number of transmissions exceeded\n");
 	       res=-1;
 	       return res;
+=======
+	printf("Unable to send information number of transmissions exceeded\n");
+	res=-1;
+	return res;
+>>>>>>> origin/master
       }
       
       res=send_inf(fd, buffer, length);
@@ -105,7 +114,17 @@ int send_inf(int fd, char* buffer, int length)
   char* inf;
   int res;
   
+<<<<<<< HEAD
  
+=======
+  inf[0]=FLAG;
+  inf[1]=A_SET;
+  inf[2]=C_SET;
+  inf[3]=BCC_SET;
+  memcpy(&inf[4], buffer, length);
+  inf[4+length]=BCC_UA;
+  inf[5+length]=FLAG;
+>>>>>>> origin/master
   
   res=write(fd, inf, length);
   if(res!=length)
