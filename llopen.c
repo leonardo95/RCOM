@@ -51,24 +51,88 @@ int llopen(int port_num, int flag)
     }
     
     tcsetattr(fd,TCSANOW,&oldtio);
+    sleep(1);
+    llclose(fd,flag);
+    
     close(fd);
     
   return ret;
 }
 
 int llopen_reciever(int fd)
-{
+{	
     int res;
     char ua[5];
     char set[5];
+    int try=0, connected = FALSE;
 
     ua_function(ua);
 
     state_machine_set(fd, set);
-
-    res=write(fd,ua,strlen(ua));
+	
+    while(!connected){
+	if(try >= 3){
+		signal_stop();
+		printf("Maximum number of tries reached, aborting connection.\n");
+		return 0;
+	}
+    	res=write(fd,ua,strlen(ua));
+	if(res != 5){
+	  if(try == 0){
+	   signal_set();
+	   try++;
+	   continue;
+	  }else{
+	    try++;
+	    continue;
+	  }
+	}else{
+	
+          connected= TRUE;
+	  printf("Connection established succesfully.\n");
+	}
+    }
     printf("%d bytes written\n", res);
+    sleep(1);
 
+    return res;
+}
+
+int llopen_transmitter(int fd)
+{
+    int res;
+    char set[5];
+    char ua[5];
+    int try=0, connected = FALSE;
+
+    set_function(set);
+    
+    while(!connected){
+	if(try >= 3){
+		signal_stop();
+		printf("Maximum number of tries reached, aborting connection.\n");
+		return 0;
+	}
+
+    	res = write(fd,set,strlen(set));
+
+	if(res != 5){
+	  if(try == 0){
+	   signal_set();
+	   try++;
+	   continue;
+	  }else{
+	    try++;
+	    continue;
+	  }
+	}else{
+	  connected = TRUE;
+	  printf("Connection established succesfully.\n");
+	}
+
+    	printf("%d bytes written\n", res);
+    }
+    state_machine_ua(fd, ua); 
     sleep(1);
 
     return res;
@@ -179,7 +243,7 @@ void state_machine_set(int fd, char* set)
           state = STATE_MACHINE_START;
         } break;
       case STATE_MACHINE_STOP: 
-      end=TRUE; 
+       end=TRUE; 
        printf("state: STATE_MACHINE_STOP\n");
       break;
     }
@@ -187,22 +251,7 @@ void state_machine_set(int fd, char* set)
   printf("state_machine -> terminated\n");
 }
 
-int llopen_transmitter(int fd)
-{
-    int res;
-    char set[5];
-    char ua[5];
 
-    set_function(set);
-
-    res = write(fd,set,strlen(set));   
-    printf("%d bytes written\n", res);
-
-    state_machine_ua(fd, ua); 
-    sleep(1);
-
-    return res;
-}
 
 void set_function(char *set)
 {
