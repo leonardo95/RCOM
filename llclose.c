@@ -20,18 +20,87 @@ int llclose_transmitter(int fd)
     int res;
     char disc[5];
     char ua[5];
+    int disconnected = FALSE, try=0;
 
     disc_function(disc);
+    while(!disconnected){
+	if(try >= 3){
+		signal_stop();
+		printf("Maximum number of tries reached.\n");
+		return 0;
+	}
+	res = write(fd,disc,strlen(disc));   
+	printf("%d bytes written\n", res);
+	if(res != 5){
+	  if(try == 0){
+	   signal_set();
+	   try++;
+	   continue;
+	  }else{
+	    try++;
+	    continue;
+	  }
+	}
 
-    res = write(fd,disc,strlen(disc));   
-    printf("%d bytes written\n", res);
+	state_machine_disc(fd, disc);
 
-    state_machine_disc(fd, disc);
-    
-    ua_function(ua);
+		    
+	ua_function(ua);
 
-    res += write(fd,ua,strlen(ua));   
-    printf("%d bytes written\n", res);
+	res = write(fd,ua,strlen(ua)); 
+	if(res != 5){
+	  if(try == 0){
+	   signal_set();
+	   try++;
+	   continue;
+	  }else{
+	    try++;
+	    continue;
+	  }
+	}
+	disconnected = TRUE;  
+	printf("%d bytes written\n", res);
+    }
+
+    return res;
+}
+
+int llclose_reciever(int fd)
+{
+    int res;
+    char ua[5];
+    char disc[5];
+    int disconnected = FALSE, try=0;
+    //ua_function(ua);
+	while(!disconnected){
+	if(try >= 3){
+		signal_stop();
+		printf("Maximum number of tries reached.\n");
+		return 0;
+	}
+    	state_machine_disc(fd, disc);
+	
+	
+	disc_function(disc);
+    	res=write(fd,disc,strlen(disc));
+	if(res != 5){
+	  if(try == 0){
+	   signal_set();
+	   try++;
+	   continue;
+	  }else{
+	    try++;
+	    continue;
+	  }
+	}  
+    	printf("%d bytes written\n", res);
+	disconnected= TRUE;
+
+    	state_machine_ua(fd, ua);	
+	
+	}    
+
+    sleep(1);
 
     return res;
 }
@@ -149,20 +218,4 @@ void state_machine_disc(int fd, char* disc)
   printf("state_machine -> terminated\n");
 }
 
-int llclose_reciever(int fd)
-{
-    int res;
-    char ua[5];
-    char disc[5];
 
-    ua_function(ua);
-
-    state_machine_disc(fd, disc);
-
-    res=write(fd,ua,strlen(ua));
-    printf("%d bytes written\n", res);
-
-    sleep(1);
-
-    return res;
-}
