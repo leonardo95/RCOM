@@ -6,7 +6,7 @@
 #define FASE_3 3
 #define FINISH 4
 
-int llread(int fd, unsigned char* buffer)
+int llread(int fd, char* buffer)
 {
 	int j = 0, res;
 	char state=START;

@@ -52,8 +52,9 @@ int llopen(int port_num, int flag)
     
     tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
-    llclose(fd,flag);
-    
+	if(flag == 0){
+    		sendControl(fd, "exemplo.txt");
+  	}  
     close(fd);
     
   return ret;

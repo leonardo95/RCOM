@@ -38,6 +38,7 @@ struct applicationLayer
 {
   int fileDescriptor;
   int status;
+  char* filename;
 };
 
 typedef struct {
