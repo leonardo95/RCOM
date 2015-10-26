@@ -50,11 +50,11 @@ int llopen(int port_num, int flag)
       ret=llopen_reciever(fd);
     }
     
+    llclose(fd,flag);
+
     tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
-	if(flag == 0){
-    		sendControl(fd, "exemplo.txt");
-  	}  
+	 
     close(fd);
     
   return ret;

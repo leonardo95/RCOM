@@ -19,7 +19,7 @@ int sendControl(int fd, char* filename){
 
 int readControl(int fd){
 
-
+return 0;
 
 }
 
