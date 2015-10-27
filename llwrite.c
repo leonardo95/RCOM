@@ -1,5 +1,17 @@
 #include "project.h"
 
+int ini_Linklayer(char* port,int baudrate, unsigned int role, int timeout){
+  link = (LinkLayer*) malloc(sizeof(LinkLayer));
+
+  strcpy(link->port, port);
+  link->baudrate = baudrate;
+  link->role = role;
+  link->sequenceNumber = 0;
+  link->timeout = timeout;
+
+  return 0;
+
+}
 
 int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize){
 
@@ -13,21 +25,22 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
     buffer[2] = C_REJ(frame_nr);
   else if(frame_type == C_I(0))
     buffer[2] = C_I(frame_nr);
+
   buffer[3] = buffer[1] ^ buffer[2];
   if(frame_type == C_I(0)){
     memcpy(buffer + 4, data, datasize);
   
-  char bcc =0;
-  int i=0;
-  for(; i < datasize; i++){
-    bcc ^= data[i];
+    char bcc2 =0;
+    int i=0;
+    for(; i < datasize; i++){
+      bcc2 ^= data[i];
+    }
+    
+    buffer[4+datasize] = bcc2;
+    buffer[4+datasize+1] = FLAG;
+  }else{
+    buffer[4] = FLAG;
   }
-  
-  buffer[4+datasize] = bcc;
-  buffer[4+datasize+1] = FLAG;
-}else{
-  buffer[4] = FLAG;
-}
 
 return 4+datasize+2;
 }
@@ -127,7 +140,7 @@ int destuffing(char** frame, int framesize){
 int llwrite(int fd, char* buffer, int length, int role)
 {
   int try = 0, done_transfering =0;
-  char* frame = malloc(255);
+  char* frame = malloc((DATASIZE+1)*2 + 4);
 
   while(!done_transfering){
     if(try == 0 || alarm_off == 1){
@@ -153,11 +166,13 @@ int llwrite(int fd, char* buffer, int length, int role)
         if(IS_RR(received[2])){
           signal_stop();
           done_transfering=1;
-          if(link_layer->ns == 0){
-              link_layer->ns =1;
-            }else if(link_layer->ns == 1){
-              link_layer->ns =0;
+          /*
+          if(link->sequenceNumber == 0){
+              link->sequenceNumber =1;
+            }else if(link->sequenceNumber == 1){
+              link->sequenceNumber =0;
             }
+            */
         }else if(IS_REJ(received[2])){
           signal_stop();
           try =0;
@@ -168,7 +183,7 @@ int llwrite(int fd, char* buffer, int length, int role)
 }
 
 int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize){
-  int buffersize =  create_frame(buffer, link_layer->role, frame_type, link_layer->ns, data, datasize);
+  int buffersize =  create_frame(buffer, link_layer->role, frame_type, link_layer->sequenceNumber, data, datasize);
 
   int framesize = stuffing(&buffer,  buffersize);
 
@@ -185,7 +200,6 @@ int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize){
 
 char* receiveframe(int fd, int role){
   char* frame = malloc(255);
-  char* error = malloc(255);
   State state= START;
 
   int ind=0;
@@ -286,10 +300,19 @@ char* receiveframe(int fd, int role){
             }
           }
 
-          if(check_frame(frame, ind+1, link_layer->role,link_layer->ns)){
+          if(ind > 6){
+            //frame I
+            destuffing(&frame, ind);
+            
+          }else{
+            //comand
+            
+          }
+
+          if(check_frame(frame, ind+1, link_layer->role,link_layer->sequenceNumber)){
             
 
             return frame;
           }
-    return error;
+    return 0;
 }

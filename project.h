@@ -68,7 +68,6 @@ typedef struct {
   unsigned int timeout;
   unsigned int numTransmissions;
   unsigned int numMessages;
-  unsigned int ns;
   char frame[MAX_SIZE];
 } linkLayer;
 
