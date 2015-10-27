@@ -1,73 +1,85 @@
 #include "project.h"
 
-int llread(int fd, char* buffer)
+int llread(int fd, char* buffer, int flag,int number)
 {
-	int j = 0, res;
-	char state=START;
-
-	while(state!=FINISH)
-	{
-		res = read(fd, buffer + j, sizeof(char));
-
-		if (res != 1)
+	int try=0, reading=TRUE, res=0, counter=0, flag=0, type=-1;
+	char* frame;
+	
+	signal_set();
+	while(reading==TRUE)
+	{	
+		if(try >= 3)
 		{
-			printf("Error Reading\n");
-			return -1;
+		signal_stop();
+		printf("Maximum number of tries reached, aborting read.\n");
+		return -1;
 		}
 
-		switch(state)
+		unsigned int c;
+
+		res = read(fd, &c, 1);
+		if(res!=1)
 		{
-			case START:
-			if(buffer[j]==FLAG)
-			{
-				state = FASE_1;
-				j++;
-			}
-			break;
+			printf("Error recieving\n");
+		}
 
-			case FASE_1:
-			if(buffer[j]==FLAG)
+		if(counter == 3)
+		{
+			if(IS_I(c))
 			{
-				state = FASE_1;
+				type=0;
+			}
+			else if(IS_RR(c))
+			{
+				type=1;
+			}
+			else if(IS_REJ(c))
+			{
+				type=2;
+			}
+		}
+		frame[counter]=c;
+
+		if(c==FLAG)
+		{
+			flag++;
+		}
+
+		if(flag==2)
+		{
+			reading=FALSE;
+		}
+
+		counter++;
+		try++;
+	}
+
+	res=check_frame(frame, counter-1, flag, number);
+	if(res==0)
+	{
+		if(type==0)
+		{
+			if(GET_C(frame[3])==number)
+			{
+				frame[3]=C_RR(frame[3]);
+				buffer=frame;
+				res=write(fd,frame,strlen(frame));
+				return res;
 			}
 			else
 			{
-				j++;
-				state = FASE_2;
+				buffer=frame;
+				res=write(fd,frame,strlen(frame));
+				return res;
 			}
-			break;
-
-			case FASE_2:
-			if(buffer[j] == FASE_1)
-			{
-				state = FASE_1;
-				j=1;
-			}
-			else
-			{
-				state =FASE_3;
-				j++;
-			}
-			break;
-
-			case FASE_3:
-			while(buffer[j] != FLAG)
-			{
-				j++;
-				res = read(fd, buffer + j, 1); 
-
-				if (res != 1)
-				{
-					printf("Error Reading\n");
-					return -1;
-				}
-			}
-
-			state=FINISH;
-			break;
+		}
+		if(frame[3]==C_SET)
+		{
+			char ua[5];
+			ua_function(ua);
+			res=write(fd,ua,strlen(ua));
+			return res;
 		}
 	}
-	state=START;
-	
-	return j;
+	return -1;
 }
