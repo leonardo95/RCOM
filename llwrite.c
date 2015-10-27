@@ -198,9 +198,10 @@ int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize){
 }
 
 
-char* receiveframe(int fd, int role){
-  char* frame = malloc(255);
-  State state= START;
+int receiveframe(int fd, char* frame){
+  frame = (char*) malloc((DATASIZE+1)*2 + 4);
+
+  State state= Start;
 
   int ind=0;
   int done = FALSE;
@@ -208,17 +209,22 @@ char* receiveframe(int fd, int role){
   while(!done){
     unsigned char c;
 
-    if(state != STATE_MACHINE_STOP){
+    if(state != STOP){
+      if(try >= 3){
+        signal_stop();
+          printf("Max number of tries reached\n")
+          return -1;
 
+      }
       int res = read(fd, &c, 1);
 
       if(res == 0){
         printf("nothing received.\n");
-        return frame;
+        return ind;
       }
     }
 
-    switch (state) {
+    switch (state) 
       case START: 
         if(c == FLAG){
           state = FLAG_RCV;
@@ -228,9 +234,7 @@ char* receiveframe(int fd, int role){
         }
         break;
       case FLAG_RCV:
-      if(role == 0)
-      {
-        if(c == A_SET){
+        if(c == A){
           state = A_RCV;
           ind++;
           frame[ind] = c;
@@ -238,18 +242,7 @@ char* receiveframe(int fd, int role){
           ind =0;
           state = START;
         }
-      }
-      else
-      {
-        if(c == A_UA){
-          state = A_RCV;
-          ind++;
-          frame[ind] = c;
-        }else if(c != FLAG){
-          ind =0;
-          state = START;
-        }
-      }break;
+        break;
       case A_RCV:
         if(c != FLAG){
 
@@ -284,35 +277,34 @@ char* receiveframe(int fd, int role){
             if(c == FLAG){
                ind++;
               frame[ind] = c;
-              state = STATE_MACHINE_STOP;
+              state = STOP;
             }else if (c != FLAG){
               ind++;
               frame[ind] = c; 
             }
             break;
-          case STATE_MACHINE_STOP:
+          case STOP:
 
               frame[ind] = 0;
-              done = TRUE;
+              done = true;
               break;
           default:
               break;
             }
           }
 
-          if(ind > 6){
-            //frame I
-            destuffing(&frame, ind);
-            
+          if(check_frame(frame, ind+1, ll->role,ll->sequenceNumber)){
+            signal_stop();
+
+            return ind;
           }else{
-            //comand
-            
+
+            if(try == 0){
+              signal_set();
+            }
+            try++;
+
           }
 
-          if(check_frame(frame, ind+1, link_layer->role,link_layer->sequenceNumber)){
-            
-
-            return frame;
-          }
-    return 0;
+  }
 }
