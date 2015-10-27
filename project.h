@@ -68,10 +68,13 @@ typedef struct {
   unsigned int timeout;
   unsigned int numTransmissions;
   unsigned int numMessages;
+  unsigned int ns;
   char frame[MAX_SIZE];
 } linkLayer;
 
 linkLayer* link_layer;
+
+int alarm_off;
 
 void set_function(char *set);
 void state_machine_ua(int fd, char* ua);
@@ -83,10 +86,16 @@ int llclose_transmitter(int fd);
 void disc_function(char *disc);
 void state_machine_disc(int fd, char* disc);
 int llclose_reciever(int fd);
-int llwrite(int fd, char* buffer, int length);
-int send_inf(int fd, char* buffer, int length);
+int llwrite(int fd, char* buffer, int length, int role);
 void signal_handler(int signal);
 void signal_set();
 void signal_stop();
 int llopen(int port_num, int flag);
 int llclose(int fd, int type);
+int check_frame(char* frame, int framesize, int role, int frame_nr);
+int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize);
+int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize);
+int C_check(char c, int frame_nr);
+int stuffing(char** frame, int framesize);
+int destuffing(char** frame, int framesize);
+char* receiveframe(int fd, int role);

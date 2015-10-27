@@ -1,9 +1,9 @@
 #include "project.h"
 
-int llread(int fd, char* buffer, int flag,int number)
+int llread(int fd, char* buffer, int flag_type,int number)
 {
 	int try=0, reading=TRUE, res=0, counter=0, flag=0, type=-1;
-	char* frame;
+	char* frame= malloc(255);;
 	
 	signal_set();
 	while(reading==TRUE)
@@ -54,7 +54,7 @@ int llread(int fd, char* buffer, int flag,int number)
 		try++;
 	}
 
-	res=check_frame(frame, counter-1, flag, number);
+	res=check_frame(frame, counter-1, flag_type, number);
 	if(res==0)
 	{
 		if(type==0)

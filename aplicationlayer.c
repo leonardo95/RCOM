@@ -12,7 +12,7 @@ int sendControl(int fd, char* filename){
 	sprintf(filesize, "%d", size);
 	printf("%s\n" ,filesize);
 	
-	llwrite(fd, filesize, strlen(filesize));
+	//llwrite(fd, filesize, strlen(filesize));
 
 	return 0;
 }

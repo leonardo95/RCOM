@@ -1,7 +1,5 @@
 #include "project.h"
 
-int alarm_off;
-
 void signal_handler(int signal){
 	if(signal == SIGALRM){
 	  alarm_off=1;

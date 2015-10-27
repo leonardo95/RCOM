@@ -45,12 +45,12 @@ int check_frame(char* frame, int framesize, int role, int frame_nr){
     return -1;
   }
 
-  if(frame[1] != A_DECIDE(frame[2], role)){
+  if(frame[1] != (A_DECIDE(frame[2], role))){
     printf("wrong A\n" );
     return -1;
   }
 
-  if(C_check(frame[2]) , frame_nr){
+  if(C_check(frame[2] , frame_nr)){
     printf("wrong C\n");
   }
 
@@ -63,7 +63,7 @@ int check_frame(char* frame, int framesize, int role, int frame_nr){
   char bcc2=0;
   int i=4;
   for(; i < framesize - 2; i++){
-    bcc ^= frame[i];
+    bcc2 ^= frame[i];
   }
 
   if(frame[framesize-2] != bcc2){
@@ -90,7 +90,7 @@ int stuffing(char** frame, int framesize){
      }
   }
 
-  *frame = (char*) realloc(*buf, newSize);
+  *frame = (char*) realloc(*frame, newSize);
 
   for(i=1; i < newSize; i++){
     if( (*frame)[i] == FLAG || (*frame)[i] == ESCAPE ){
@@ -118,13 +118,13 @@ int destuffing(char** frame, int framesize){
     }
   }
 
-  *frame = (char*) realloc(*frame, bufSize);
+  *frame = (char*) realloc(*frame, framesize);
 
   return framesize;
 }
 
 
-int llwrite(int fd, char* buffer, int length)
+int llwrite(int fd, char* buffer, int length, int role)
 {
   int try = 0, done_transfering =0;
   char* frame = malloc(255);
@@ -135,11 +135,11 @@ int llwrite(int fd, char* buffer, int length)
 
         if(try >= 3){
           signal_stop();
-          printf("Max number of tries reached\n")
-          return 0;
+          printf("Max number of tries reached\n");
+          return -1;
         }
 
-        int suc = sendframe(fd, frame, role, C_I(0), buffer, length);
+        int suc = sendframe(fd, frame, C_I(0), buffer, length);
 
         if(try == 0){
           signal_set();
@@ -148,15 +148,15 @@ int llwrite(int fd, char* buffer, int length)
           }
         }
 
-        char* received = receiveframe(fd);
+        char* received = receiveframe(fd, role);
 
-        if(IS_RR(received[2]){
+        if(IS_RR(received[2])){
           signal_stop();
           done_transfering=1;
-          if(ll->ns == 0){
-              ll->ns =1;
-            }else if(ll->ns == 1){
-              ll->ns =0;
+          if(link_layer->ns == 0){
+              link_layer->ns =1;
+            }else if(link_layer->ns == 1){
+              link_layer->ns =0;
             }
         }else if(IS_REJ(received[2])){
           signal_stop();
@@ -164,10 +164,11 @@ int llwrite(int fd, char* buffer, int length)
         }
     }
   }
+  return length;
 }
 
-int sendframe(int fd, const char* buffer, int frame_type, char* data, int datasize){
-  int buffersize =  create_frame(buffer, ll->role, frame_type, ll->ns, data, datasize);
+int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize){
+  int buffersize =  create_frame(buffer, link_layer->role, frame_type, link_layer->ns, data, datasize);
 
   int framesize = stuffing(&buffer,  buffersize);
 
@@ -182,10 +183,10 @@ int sendframe(int fd, const char* buffer, int frame_type, char* data, int datasi
 }
 
 
-char* receiveframe(int fd){
+char* receiveframe(int fd, int role){
   char* frame = malloc(255);
-
-  State state= Start;
+  char* error = malloc(255);
+  State state= START;
 
   int ind=0;
   int done = FALSE;
@@ -193,7 +194,7 @@ char* receiveframe(int fd){
   while(!done){
     unsigned char c;
 
-    if(state != STOP){
+    if(state != STATE_MACHINE_STOP){
 
       int res = read(fd, &c, 1);
 
@@ -203,7 +204,7 @@ char* receiveframe(int fd){
       }
     }
 
-    switch (state) 
+    switch (state) {
       case START: 
         if(c == FLAG){
           state = FLAG_RCV;
@@ -213,7 +214,9 @@ char* receiveframe(int fd){
         }
         break;
       case FLAG_RCV:
-        if(c == A){
+      if(role == 0)
+      {
+        if(c == A_SET){
           state = A_RCV;
           ind++;
           frame[ind] = c;
@@ -221,7 +224,18 @@ char* receiveframe(int fd){
           ind =0;
           state = START;
         }
-        break;
+      }
+      else
+      {
+        if(c == A_UA){
+          state = A_RCV;
+          ind++;
+          frame[ind] = c;
+        }else if(c != FLAG){
+          ind =0;
+          state = START;
+        }
+      }break;
       case A_RCV:
         if(c != FLAG){
 
@@ -256,27 +270,26 @@ char* receiveframe(int fd){
             if(c == FLAG){
                ind++;
               frame[ind] = c;
-              state = STOP;
+              state = STATE_MACHINE_STOP;
             }else if (c != FLAG){
               ind++;
               frame[ind] = c; 
             }
             break;
-          case STOP:
+          case STATE_MACHINE_STOP:
 
               frame[ind] = 0;
-              done = true;
+              done = TRUE;
               break;
           default:
               break;
             }
           }
 
-          if(check_frame(frame, ind+1, ll->role,ll->ns)){
+          if(check_frame(frame, ind+1, link_layer->role,link_layer->ns)){
             
 
             return frame;
           }
-
-  }
+    return error;
 }
