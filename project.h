@@ -31,6 +31,7 @@
 #define FINISH 4
 #define TRANSMITER 1
 #define RECEIVER 0
+#define ESCAPE 0x7d
 
 #define C_RR(n) ((n << 5) | 1)
 #define C_REJ(n) ((n << 5) | 5)
@@ -40,12 +41,13 @@
 #define IS_REJ(byte) ( byte == C_REJ(0) || byte == C_REJ(1) )
 #define IS_I(byte) ( byte == C_I(0) || byte == C_I(1) )
 
+#define GET_C(n) (n >> 5)
+
 #define ISCOMAND(c) (c == C_SET || c == C_DISC || IS_I(c) )
 
 #define ISREPLY(c) (c == C_UA || IS_RR(c) || IS_REJ(c) )
 
 #define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x03 : 0x01) : ( ISREPLY(c)? 0x03 : 0x01)
-
 
 typedef enum {
 	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
@@ -61,6 +63,7 @@ struct applicationLayer
 typedef struct {
   char port[20];
   int baudRate;
+  unsigned int role;
   unsigned int sequenceNumber;
   unsigned int timeout;
   unsigned int numTransmissions;
