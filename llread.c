@@ -17,8 +17,7 @@ int llread(int fd, char* buffer, int flag_type,int number)
 		res=check_frame(frame, counter-1, flag_type, number);
 		if(res==0)
 		{
-			if(type==0)
-			{
+			if(IS_I(frame[2])){	
 				if(GET_C(frame[2]) == number)
 				{
 					frame_data=frame;
@@ -28,7 +27,7 @@ int llread(int fd, char* buffer, int flag_type,int number)
 					char nulo[1];
 					nulo[0] = '\0';
 					//create_frame(buffer, link->role, C_RR(!link->sequenceNumber), link->sequenceNumber);
-					sendframe(fd, buf, C_RR(!link->sequenceNumber), nulo, 0);
+					sendframe(fd, buf, C_RR(!link->sequenceNumber), nulo, 0, link->sequenceNumber);
 					if(link->sequenceNumber == 0){
 		              link->sequenceNumber =1;
 		            }else if(link->sequenceNumber == 1){
@@ -41,11 +40,11 @@ int llread(int fd, char* buffer, int flag_type,int number)
 					sendframe(fd, buf, C_REJ(!link->sequenceNumber), nulo, 0);
 				}
 			}
-			if(frame[3]==C_SET)
+			if(frame[2]==C_SET)
 			{
 				char ua[5];
 				ua_function(ua);
-				res=write(fd,ua,strlen(ua));
+				res=write(fd,ua,5);
 				return res;
 			}
 		}

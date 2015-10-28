@@ -152,7 +152,7 @@ int llwrite(int fd, char* buffer, int length, int role)
           return -1;
         }
 
-        int suc = sendframe(fd, frame, C_I(0), buffer, length);
+        int suc = sendframe(fd, frame, C_I(0), buffer, length, link->sequenceNumber);
 
         if(try == 0){
           signal_set();
@@ -182,8 +182,8 @@ int llwrite(int fd, char* buffer, int length, int role)
   return length;
 }
 
-int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize){
-  int buffersize =  create_frame(buffer, link_layer->role, frame_type, link_layer->sequenceNumber, data, datasize);
+int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, int number){
+  int buffersize =  create_frame(buffer, link_layer->role, frame_type, number, data, datasize);
 
   int framesize = stuffing(&buffer,  buffersize);
 
