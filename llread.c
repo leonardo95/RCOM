@@ -2,7 +2,7 @@
 
 int llread(int fd, char* buffer, int flag_type,int number)
 {
-	int try=0, reading=TRUE, res=0, counter=0, flag=0, type=-1;
+	int reading=TRUE, res=0, counter=0;
 	char frame[(DATASIZE+1)*2 + 4];
 	
 	signal_set();
@@ -20,24 +20,27 @@ int llread(int fd, char* buffer, int flag_type,int number)
 			if(IS_I(frame[2])){	
 				if(GET_C(frame[2]) == number)
 				{
+					char* frame_data=malloc(frame_size);
 					frame_data=frame;
 					int frame_data_size = retrievedata(frame_data, frame_size);
 					memcpy(buffer, frame_data, frame_data_size);
-					char buf[6];
+					//char buf[6];
 					char nulo[1];
 					nulo[0] = '\0';
-					//create_frame(buffer, link->role, C_RR(!link->sequenceNumber), link->sequenceNumber);
-					sendframe(fd, buf, C_RR(!link->sequenceNumber), nulo, 0, link->sequenceNumber);
-					if(link->sequenceNumber == 0){
-		              link->sequenceNumber =1;
-		            }else if(link->sequenceNumber == 1){
-		              link->sequenceNumber =0;
+					//create_frame(buffer, link_layer->role, C_RR(!link_layer->sequenceNumber), link_layer->sequenceNumber);
+					sendframe(fd, buffer, C_RR(0), nulo, 0, link_layer->sequenceNumber);
+					if(link_layer->sequenceNumber == 0){
+		              link_layer->sequenceNumber =1;
+		            }else if(link_layer->sequenceNumber == 1){
+		              link_layer->sequenceNumber =0;
 		            }
 					return 1;
 				}
 				else
 				{
-					sendframe(fd, buf, C_REJ(!link->sequenceNumber), nulo, 0);
+					char nulo[1];
+					nulo[0] = '\0';
+					sendframe(fd, buffer, C_REJ(!link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
 				}
 			}
 			if(frame[2]==C_SET)
@@ -53,7 +56,7 @@ int llread(int fd, char* buffer, int flag_type,int number)
 }
 
 int retrievedata(char* frame, int frame_size){
-	char* new_frame[frame_size - 6];
+	char* new_frame=malloc(frame_size - 6);
 	int i;
 	for(i=0; i < frame_size-6; i++){
 		new_frame[i] = frame[i+4];

@@ -32,6 +32,7 @@
 #define TRANSMITER 1
 #define RECEIVER 0
 #define ESCAPE 0x7d
+#define DATASIZE 1024
 
 #define C_RR(n) ((n << 5) | 1)
 #define C_REJ(n) ((n << 5) | 5)
@@ -92,9 +93,10 @@ void signal_stop();
 int llopen(int port_num, int flag);
 int llclose(int fd, int type);
 int check_frame(char* frame, int framesize, int role, int frame_nr);
-int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize);
+int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, int frame_nr);
 int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize);
 int C_check(char c, int frame_nr);
 int stuffing(char** frame, int framesize);
 int destuffing(char** frame, int framesize);
-char* receiveframe(int fd, int role);
+int receiveframe(int fd, char* frame);
+int retrievedata(char* frame, int frame_size);

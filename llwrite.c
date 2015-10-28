@@ -1,13 +1,12 @@
 #include "project.h"
 
-int ini_Linklayer(char* port,int baudrate, unsigned int role, int timeout){
-  link = (LinkLayer*) malloc(sizeof(LinkLayer));
-
-  strcpy(link->port, port);
-  link->baudrate = baudrate;
-  link->role = role;
-  link->sequenceNumber = 0;
-  link->timeout = timeout;
+int ini_link_layerlayer(char* port,int baudrate, unsigned int role, int timeout){
+  
+  strcpy(link_layer->port, port);
+  link_layer->baudRate = baudrate;
+  link_layer->role = role;
+  link_layer->sequenceNumber = 0;
+  link_layer->timeout = timeout;
 
   return 0;
 
@@ -152,7 +151,7 @@ int llwrite(int fd, char* buffer, int length, int role)
           return -1;
         }
 
-        int suc = sendframe(fd, frame, C_I(0), buffer, length, link->sequenceNumber);
+        int suc = sendframe(fd, frame, C_I(0), buffer, length, link_layer->sequenceNumber);
 
         if(try == 0){
           signal_set();
@@ -161,16 +160,18 @@ int llwrite(int fd, char* buffer, int length, int role)
           }
         }
 
-        char* received = receiveframe(fd, role);
+        char received[5];
+
+        receiveframe(fd, received);
 
         if(IS_RR(received[2])){
           signal_stop();
           done_transfering=1;
           /*
-          if(link->sequenceNumber == 0){
-              link->sequenceNumber =1;
-            }else if(link->sequenceNumber == 1){
-              link->sequenceNumber =0;
+          if(link_layer->sequenceNumber == 0){
+              link_layer->sequenceNumber =1;
+            }else if(link_layer->sequenceNumber == 1){
+              link_layer->sequenceNumber =0;
             }
             */
         }else if(IS_REJ(received[2])){
@@ -201,18 +202,18 @@ int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, in
 int receiveframe(int fd, char* frame){
   frame = (char*) malloc((DATASIZE+1)*2 + 4);
 
-  State state= Start;
+  State state= START;
 
-  int ind=0;
+  int ind=0,try=0;
   int done = FALSE;
 
   while(!done){
     unsigned char c;
 
-    if(state != STOP){
+    if(state != STATE_MACHINE_STOP){
       if(try >= 3){
         signal_stop();
-          printf("Max number of tries reached\n")
+          printf("Max number of tries reached\n");
           return -1;
 
       }
@@ -224,7 +225,7 @@ int receiveframe(int fd, char* frame){
       }
     }
 
-    switch (state) 
+    switch (state) {
       case START: 
         if(c == FLAG){
           state = FLAG_RCV;
@@ -234,7 +235,7 @@ int receiveframe(int fd, char* frame){
         }
         break;
       case FLAG_RCV:
-        if(c == A){
+        if(c == A_UA){
           state = A_RCV;
           ind++;
           frame[ind] = c;
@@ -277,23 +278,23 @@ int receiveframe(int fd, char* frame){
             if(c == FLAG){
                ind++;
               frame[ind] = c;
-              state = STOP;
+              state = STATE_MACHINE_STOP;
             }else if (c != FLAG){
               ind++;
               frame[ind] = c; 
             }
             break;
-          case STOP:
+          case STATE_MACHINE_STOP:
 
               frame[ind] = 0;
-              done = true;
+              done = TRUE;
               break;
           default:
               break;
             }
           }
 
-          if(check_frame(frame, ind+1, ll->role,ll->sequenceNumber)){
+          if(check_frame(frame, ind+1,link_layer->role,link_layer->sequenceNumber)){
             signal_stop();
 
             return ind;
@@ -305,6 +306,5 @@ int receiveframe(int fd, char* frame){
             try++;
 
           }
-
-  }
+          return 0;
 }

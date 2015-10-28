@@ -29,7 +29,7 @@ int llopen(int port_num, int flag)
 
     newtio.c_lflag = 0;
     newtio.c_cc[VTIME]    = 0;
-    newtio.c_cc[VMIN]     = 5;
+    newtio.c_cc[VMIN]     = 1;
     
     tcflush(fd, TCIOFLUSH);
 
@@ -50,7 +50,7 @@ int llopen(int port_num, int flag)
       ret=llopen_reciever(fd);
     }
     
-    llclose(fd,flag);
+    //llclose(fd,flag);
 
     tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
