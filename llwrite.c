@@ -140,7 +140,7 @@ int llwrite(int fd, char* buffer, int length, int role)
 {
   int try = 0, done_transfering =0;
   char* frame = malloc((DATASIZE+1)*2 + 4);
-
+  printf("TESTE 3\n");
   while(!done_transfering){
     if(try == 0 || alarm_off == 1){
         alarm_off =0;
@@ -148,11 +148,12 @@ int llwrite(int fd, char* buffer, int length, int role)
         if(try >= 3){
           signal_stop();
           printf("Max number of tries reached\n");
+            printf("ERRO\n");
           return -1;
         }
-
+          printf("TESTE 3\n");
         int suc = sendframe(fd, frame, C_I(0), buffer, length, link_layer->sequenceNumber);
-
+        printf("FRAME SENT\n");
         if(try == 0){
           signal_set();
           if(!suc){
@@ -163,7 +164,7 @@ int llwrite(int fd, char* buffer, int length, int role)
         char received[5];
 
         receiveframe(fd, received);
-
+        printf("FRAME RECIEVED\n");
         if(IS_RR(received[2])){
           signal_stop();
           done_transfering=1;
@@ -180,6 +181,7 @@ int llwrite(int fd, char* buffer, int length, int role)
         }
     }
   }
+  printf("AQUI %d\n", length);
   return length;
 }
 

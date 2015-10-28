@@ -6,14 +6,11 @@ int llopen(int port_num, int flag)
   struct termios oldtio,newtio;
   int fd, ret=0;
   char port_number[255];
-   
   sprintf(port_number, "%d", port_num);
   strcpy(port, "/dev/ttyS");
   strcat(port, port_number);
   printf("%s\n", port);
-  
     fd = open(port, O_RDWR | O_NOCTTY );
-    
     if (fd <0) { perror(port); exit(-1); }
 
     if ( tcgetattr(fd,&oldtio) == -1) 
@@ -21,7 +18,6 @@ int llopen(int port_num, int flag)
       perror("tcgetattr");
       exit(-1);
     }
-
     bzero(&newtio, sizeof(newtio));
     newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
@@ -32,7 +28,6 @@ int llopen(int port_num, int flag)
     newtio.c_cc[VMIN]     = 1;
     
     tcflush(fd, TCIOFLUSH);
-
     if ( tcsetattr(fd,TCSANOW,&newtio) == -1) 
     {
       perror("tcsetattr");
@@ -44,14 +39,13 @@ int llopen(int port_num, int flag)
     if(flag==0)
     {
       ret=llopen_transmitter(fd);
+
     }
     else if(flag==1)
     {
       ret=llopen_reciever(fd);
     }
     
-    //llclose(fd,flag);
-
     tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
 	 
@@ -78,7 +72,7 @@ int llopen_reciever(int fd)
 		return 0;
 	}
     	res=write(fd,ua,strlen(ua));
-	if(res != 5){
+	if(res != 6){
 	  if(try == 0){
 	   signal_set();
 	   try++;
@@ -105,9 +99,7 @@ int llopen_transmitter(int fd)
     char set[5];
     char ua[5];
     int try=0, connected = FALSE;
-
     set_function(set);
-    
     while(!connected){
 	if(try >= 3){
 		signal_stop();
@@ -116,8 +108,8 @@ int llopen_transmitter(int fd)
 	}
 
     	res = write(fd,set,strlen(set));
-
-	if(res != 5){
+    printf("%d bytes written\n", res);
+	if(res != 6){
 	  if(try == 0){
 	   signal_set();
 	   try++;
@@ -130,7 +122,6 @@ int llopen_transmitter(int fd)
 	  connected = TRUE;
 	  printf("Connection established succesfully.\n");
 	}
-
     	printf("%d bytes written\n", res);
     }
     state_machine_ua(fd, ua); 

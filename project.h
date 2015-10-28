@@ -100,3 +100,4 @@ int stuffing(char** frame, int framesize);
 int destuffing(char** frame, int framesize);
 int receiveframe(int fd, char* frame);
 int retrievedata(char* frame, int frame_size);
+int llread(int fd, char* buffer, int flag_type);

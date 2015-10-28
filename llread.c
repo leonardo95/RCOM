@@ -1,6 +1,6 @@
 #include "project.h"
 
-int llread(int fd, char* buffer, int flag_type,int number)
+int llread(int fd, char* buffer, int flag_type)
 {
 	int reading=TRUE, res=0, counter=0;
 	char frame[(DATASIZE+1)*2 + 4];
@@ -14,11 +14,11 @@ int llread(int fd, char* buffer, int flag_type,int number)
 
 		int frame_size = receiveframe(fd, frame);
 
-		res=check_frame(frame, counter-1, flag_type, number);
+		res=check_frame(frame, counter-1, flag_type, link_layer->sequenceNumber);
 		if(res==0)
 		{
 			if(IS_I(frame[2])){	
-				if(GET_C(frame[2]) == number)
+				if(GET_C(frame[2]) == link_layer->sequenceNumber)
 				{
 					char* frame_data=malloc(frame_size);
 					frame_data=frame;
