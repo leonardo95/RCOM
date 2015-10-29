@@ -23,7 +23,6 @@
 #define A_DISC 0x03
 #define C_DISC 0x0B
 #define BCC_DISC (0x03^0x0B)
-#define MAX_SIZE 15
 #define START 0
 #define FASE_1 1
 #define FASE_2 2
@@ -34,6 +33,10 @@
 #define ESCAPE 0x7d
 #define DATASIZE 1024
 #define END 0x5E
+#define FILE_SIZE_CONTROL 0
+#define FILE_NAME_CONTROL 1
+#define CONTROL_START 1
+#define CONTROL_END 2
 
 #define C_RR(n) ((n << 5) | 1)
 #define C_REJ(n) ((n << 5) | 5)
@@ -49,18 +52,18 @@
 
 #define ISREPLY(c) (c == C_UA || IS_RR(c) || IS_REJ(c) )
 
-#define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x03 : 0x01) : ( ISREPLY(c)? 0x03 : 0x01)
-
+//#define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x03 : 0x01) : ( ISREPLY(c)? 0x03 : 0x01)
+#define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x01 : 0x03) : ( ISREPLY(c)? 0x01 : 0x03)
 typedef enum {
 	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
 } State;
 
-struct applicationLayer
+typedef struct 
 {
   int fileDescriptor;
   int status;
   char* filename;
-};
+}applicationLayer;
 
 typedef struct {
   char port[20];
@@ -70,9 +73,10 @@ typedef struct {
   unsigned int timeout;
   unsigned int numTransmissions;
   unsigned int numMessages;
-  char frame[MAX_SIZE];
+  char frame[DATASIZE];
 } linkLayer;
 
+linkLayer link_layerInit;
 linkLayer* link_layer;
 
 int alarm_off;
@@ -102,3 +106,7 @@ int destuffing(char** frame, int framesize);
 int receiveframe(int fd, char* frame);
 int retrievedata(char* frame, int frame_size);
 int llread(int fd, char* buffer, int flag_type);
+int ini_link_layer(char* port,int baudrate, unsigned int role, int timeout);
+int receiveFile(int fd,int port);
+int sendFile(int fd, char* filename);
+int start_applicationlayer(char* port, int role, char* filename);

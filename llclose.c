@@ -12,6 +12,7 @@ int llclose(int fd, int type)
   {
     res=llclose_reciever(fd);
   }
+   close(fd);
   return res;
 }
 

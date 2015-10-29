@@ -1,12 +1,22 @@
 #include "project.h"
 
-int ini_link_layerlayer(char* port,int baudrate, unsigned int role, int timeout){
+int ini_link_layer(char* port,int baudrate, unsigned int role, int timeout){
   
-  strcpy(link_layer->port, port);
+  char new_port[255];
+  strcpy(new_port, "/dev/ttyS");
+  strcat(new_port, port);
+  //printf("%s\n", new_port);
+  //printf("%s\n", link_layer->port);
+  strcpy(link_layer->port, new_port);
+  // printf("TESTE 2\n");
   link_layer->baudRate = baudrate;
+  // printf("TESTE 3\n");
   link_layer->role = role;
+  // printf("TESTE 4\n");
   link_layer->sequenceNumber = 0;
+  // printf("TESTE 5\n");
   link_layer->timeout = timeout;
+  // printf("TESTE 6\n");
 
   return 0;
 
@@ -15,20 +25,16 @@ int ini_link_layerlayer(char* port,int baudrate, unsigned int role, int timeout)
 int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize){
 
   printf("initiating create_frame function\n");
-  printf("C_RR=%x\n", frame_type);
-  printf("C_DISC=%x\n", C_DISC);
-  printf("C_SET=%x\n", C_SET);
-  printf("C_UA=%x\n", C_UA);
-  printf("<-C_RR=%x\n", C_RR(0));
   buffer[0] = FLAG;
+  printf("%d\n", frame_type);
+  printf("%d\n", role);
   buffer[1] = A_DECIDE(frame_type, role);
+  printf("BUFFER[1]!!!!!!!!!!!!!!!!!%x\n", buffer[1]);
   if(frame_type == C_DISC || frame_type == C_SET || frame_type == C_UA)
     buffer[2] = frame_type;
   else if(frame_type == C_RR(0))
   {
-    printf("BUFFER[2]=%x\n", buffer[2]);
     buffer[2] = C_RR(frame_nr);
-    printf("BUFFER[2]=%x\n", buffer[2]);
   }
   else if(frame_type == C_REJ(0))
     buffer[2] = C_REJ(frame_nr);
@@ -110,8 +116,11 @@ int stuffing(char** frame, int framesize){
       newSize++;
      }
   }
-  *frame = (char*) realloc(*frame, newSize);
-
+  printf("FRAME SIZE: %d\n", framesize);
+  printf("NEW SIZE: %d\n", newSize);
+  printf("FRAME [0] = %x\n", *frame[0]);
+  //*frame = (char*) realloc(*frame, newSize);
+  *frame = malloc(newSize);
   for(i=1; i < newSize-2; i++){
     if( (*frame)[i] == FLAG || (*frame)[i] == ESCAPE ){
       memmove(*frame + i + 1, *frame + i, framesize - i);
@@ -159,9 +168,9 @@ int llwrite(int fd, char* buffer, int length, int role)
           printf("Max number of tries reached\n");
           return -1;
         }
-        //int suc = sendframe(fd, frame, C_I(0), buffer, length, link_layer->sequenceNumber);
         printf("initiating sendframe test\n");
-        int suc = sendframe(fd, frame, C_I(0), buffer, length, 0);
+        int suc = sendframe(fd, frame, C_I(0), buffer, length, link_layer->sequenceNumber);
+        //int suc = sendframe(fd, frame, C_I(0), buffer, length, 0);
         if(try == 0){
           signal_set();
           if(!suc){
@@ -176,13 +185,7 @@ int llwrite(int fd, char* buffer, int length, int role)
         if(IS_RR(received[2])){
           signal_stop();
           done_transfering=1;
-          /*
-          if(link_layer->sequenceNumber == 0){
-              link_layer->sequenceNumber =1;
-            }else if(link_layer->sequenceNumber == 1){
-              link_layer->sequenceNumber =0;
-            }
-            */
+        
         }else if(IS_REJ(received[2])){
           signal_stop();
           try =0;
@@ -196,16 +199,15 @@ int llwrite(int fd, char* buffer, int length, int role)
 int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, int number){
 
   printf("initiating sendframe function\n");
-  //int buffersize =  create_frame(buffer, link_layer->role, frame_type, number, data, datasize);
   printf("initiating create_frame test\n");
-  printf("BUFFER[2]= %x\n", buffer[2]);
-  int buffersize =  create_frame(buffer, 0, frame_type, number, data, datasize);
+  int buffersize =  create_frame(buffer, link_layer->role, frame_type, number, data, datasize);
+  //int buffersize =  create_frame(buffer, 0, frame_type, number, data, datasize);
 
   printf("initiating stuffing test\n");
   int framesize = stuffing(&buffer,  buffersize);
 
  printf("initiating write function\n");
- printf("BUFFER[0] = %x\n", buffer[0]);
+ //printf("BUFFER[0] = %x\n", buffer[0]);
  int res = write(fd, buffer, framesize);
 
   if(res != framesize){
@@ -225,7 +227,7 @@ int receiveframe(int fd, char* frame){
   int ind=0,try=0;
   int done = FALSE;
   while(!done){
-    char c = 0;
+    char c = 1;
 
     if(state != STATE_MACHINE_STOP){
       if(try >= 3){
@@ -320,10 +322,11 @@ int receiveframe(int fd, char* frame){
               break;
             }
           }
-          //if(check_frame(frame, ind+1,link_layer->role,link_layer->sequenceNumber)){
 
           printf("initiating check_frame test\n");
-          if(check_frame(frame, ind+1,1,0)){
+          if(check_frame(frame, ind+1,link_layer->role,link_layer->sequenceNumber)){
+
+          //if(check_frame(frame, ind+1,1,0)){
             signal_stop();
 
             return ind;

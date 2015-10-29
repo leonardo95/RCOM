@@ -57,8 +57,6 @@ int llopen(int port_num, int flag)
 
     tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
-	 
-    //close(fd);
     
   return fd;
 }

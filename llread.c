@@ -20,22 +20,22 @@ int llread(int fd, char* buffer, int flag_type)
 				{
 					char* frame_data=malloc(frame_size);
 					frame_data=frame;
+					
+
 					printf("initating retrievedata test\n");
 					int frame_data_size = retrievedata(frame_data, frame_size);
 					memcpy(buffer, frame_data, frame_data_size);
 					char nulo[1];
 					nulo[0] = '\0';
 					printf("Initating sendframe test\n");
-					//sendframe(fd, buffer, C_RR(0), nulo, 0, link_layer->sequenceNumber);
-					printf("BUFFER[2]= %x\n", buffer[2]);
-					printf("->C_RR=%x\n", C_RR(0));
-					sendframe(fd, buffer, C_RR(0), nulo, 0, 0);
-					//if(link_layer->sequenceNumber == 0){
-						if(0 == 0){
-		              //ink_layer->sequenceNumber =1;
-		            //}else if(link_layer->sequenceNumber == 1){
-		          }else if(0 == 1){
-		              //link_layer->sequenceNumber =0;
+					sendframe(fd, buffer, C_RR(0), nulo, 0, link_layer->sequenceNumber);
+					//sendframe(fd, buffer, C_RR(0), nulo, 0, 0);
+					if(link_layer->sequenceNumber == 0){
+					//	if(0 == 0){
+		              link_layer->sequenceNumber =1;
+		            }else if(link_layer->sequenceNumber == 1){
+		          //}else if(0 == 1){
+		              link_layer->sequenceNumber =0;
 		            }
 					return frame_size;
 				}

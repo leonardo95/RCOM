@@ -2,10 +2,15 @@
 
 int main(int argc, char** argv)
 {
-  int fd=0;
-  int port=atoi(argv[1]);
+ link_layer = &link_layerInit;
+  //int fd=0;
+  char* port=argv[1];
   int flag=atoi(argv[2]);
+  char* filename=argv[3];
   
+  start_applicationlayer(port, flag, filename);
+
+/*
   fd=llopen(port, flag);
   printf("file descriptor = %d\n", fd);
   if(flag==1)
@@ -31,6 +36,6 @@ int main(int argc, char** argv)
   	}
     printf("\n");
   }
-
+*/
   return 0;
 }
