@@ -6,30 +6,30 @@ int main(int argc, char** argv)
   int port=atoi(argv[1]);
   int flag=atoi(argv[2]);
   
-  printf("TESTE 1\n");
   fd=llopen(port, flag);
-  printf("TESTE 2\n");
-  if(flag==0)
-  {
-  	 printf("TESTE 3.1\n");
-  	char buffer[255];
-  	int i=0;
-  	for(;i<255;i++)
-  	{
-  		buffer[i]=i;
-  	}
-  	 printf("TESTE 4\n");
-  	llwrite(fd,buffer,255,0);
-  }
+  printf("file descriptor = %d\n", fd);
   if(flag==1)
   {
-  	char buffer[255];
+  	char buffer[100];
+  	int i=0;
+  	for(;i<100;i++)
+  	{
+  		buffer[i]='b';
+  	}
+    printf("initiating llwrite test\n");
+  	llwrite(fd,buffer,100,0);
+  }
+  if(flag==0)
+  {
+  	char* buffer=malloc(100);
+    printf("initiating llread test\n");
   	llread(fd, buffer, 1);
   	int i=0;
-  	for(;i<255;i++)
+  	for(;i<100;i++)
   	{
   		printf("0x%02x ", buffer[i]);
   	}
+    printf("\n");
   }
 
   return 0;

@@ -2,39 +2,42 @@
 
 int llread(int fd, char* buffer, int flag_type)
 {
-	int reading=TRUE, res=0, counter=0;
+	printf("initating llread function\n");
+	int reading=TRUE, res=0;
 	char frame[(DATASIZE+1)*2 + 4];
 	
 	signal_set();
 
 	while(reading==TRUE)
 	{	
-
-		
-
+		printf("LLREAD initating receiveframe test\n");
 		int frame_size = receiveframe(fd, frame);
-
-		res=check_frame(frame, counter-1, flag_type, link_layer->sequenceNumber);
 		if(res==0)
 		{
 			if(IS_I(frame[2])){	
-				if(GET_C(frame[2]) == link_layer->sequenceNumber)
+				if(GET_C(frame[2]) == 0)
+				//if(GET_C(frame[2]) == link_layer->sequenceNumber)
 				{
 					char* frame_data=malloc(frame_size);
 					frame_data=frame;
+					printf("initating retrievedata test\n");
 					int frame_data_size = retrievedata(frame_data, frame_size);
 					memcpy(buffer, frame_data, frame_data_size);
-					//char buf[6];
 					char nulo[1];
 					nulo[0] = '\0';
-					//create_frame(buffer, link_layer->role, C_RR(!link_layer->sequenceNumber), link_layer->sequenceNumber);
-					sendframe(fd, buffer, C_RR(0), nulo, 0, link_layer->sequenceNumber);
-					if(link_layer->sequenceNumber == 0){
-		              link_layer->sequenceNumber =1;
-		            }else if(link_layer->sequenceNumber == 1){
-		              link_layer->sequenceNumber =0;
+					printf("Initating sendframe test\n");
+					//sendframe(fd, buffer, C_RR(0), nulo, 0, link_layer->sequenceNumber);
+					printf("BUFFER[2]= %x\n", buffer[2]);
+					printf("->C_RR=%x\n", C_RR(0));
+					sendframe(fd, buffer, C_RR(0), nulo, 0, 0);
+					//if(link_layer->sequenceNumber == 0){
+						if(0 == 0){
+		              //ink_layer->sequenceNumber =1;
+		            //}else if(link_layer->sequenceNumber == 1){
+		          }else if(0 == 1){
+		              //link_layer->sequenceNumber =0;
 		            }
-					return 1;
+					return frame_size;
 				}
 				else
 				{
@@ -56,10 +59,12 @@ int llread(int fd, char* buffer, int flag_type)
 }
 
 int retrievedata(char* frame, int frame_size){
+	printf("initating retrievedata function\n");
 	char* new_frame=malloc(frame_size - 6);
 	int i;
 	for(i=0; i < frame_size-6; i++){
 		new_frame[i] = frame[i+4];
 	}
+	printf("retrievedata terminated succefully\n");
 	return frame_size-6;
 }																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																							

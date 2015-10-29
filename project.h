@@ -33,6 +33,7 @@
 #define RECEIVER 0
 #define ESCAPE 0x7d
 #define DATASIZE 1024
+#define END 0x5E
 
 #define C_RR(n) ((n << 5) | 1)
 #define C_REJ(n) ((n << 5) | 5)

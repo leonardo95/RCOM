@@ -2,14 +2,14 @@
 
 int llopen(int port_num, int flag)
 {
+  printf("llopen initiated succesfully\n");
   char port[255];
   struct termios oldtio,newtio;
-  int fd, ret=0;
+  int fd, res=0;
   char port_number[255];
   sprintf(port_number, "%d", port_num);
   strcpy(port, "/dev/ttyS");
   strcat(port, port_number);
-  printf("%s\n", port);
     fd = open(port, O_RDWR | O_NOCTTY );
     if (fd <0) { perror(port); exit(-1); }
 
@@ -38,20 +38,29 @@ int llopen(int port_num, int flag)
     
     if(flag==0)
     {
-      ret=llopen_transmitter(fd);
+      res=llopen_transmitter(fd);
 
     }
     else if(flag==1)
     {
-      ret=llopen_reciever(fd);
+      res=llopen_reciever(fd);
     }
     
+    if(res==6)
+    {
+      printf("llopen terminated succesfully\n");
+    }
+    else
+    {
+      printf("llopen terminated unsuccesfully\n");
+    }
+
     tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
 	 
-    close(fd);
+    //close(fd);
     
-  return ret;
+  return fd;
 }
 
 int llopen_reciever(int fd)
@@ -84,10 +93,10 @@ int llopen_reciever(int fd)
 	}else{
 	
           connected= TRUE;
-	  printf("Connection established succesfully.\n");
+	  //printf("Connection established succesfully.\n");
 	}
     }
-    printf("%d bytes written\n", res);
+    //printf("%d bytes written\n", res);
     sleep(1);
 
     return res;
@@ -108,7 +117,7 @@ int llopen_transmitter(int fd)
 	}
 
     	res = write(fd,set,strlen(set));
-    printf("%d bytes written\n", res);
+    //printf("%d bytes written\n", res);
 	if(res != 6){
 	  if(try == 0){
 	   signal_set();
@@ -120,9 +129,9 @@ int llopen_transmitter(int fd)
 	  }
 	}else{
 	  connected = TRUE;
-	  printf("Connection established succesfully.\n");
+	  //printf("Connection established succesfully.\n");
 	}
-    	printf("%d bytes written\n", res);
+    	//printf("%d bytes written\n", res);
     }
     state_machine_ua(fd, ua); 
     sleep(1);
@@ -132,19 +141,15 @@ int llopen_transmitter(int fd)
 
 void ua_function(char *ua)
 {
-  printf("ua_function -> initializing\n");
     ua[0] = FLAG;
     ua[1] = A_UA;
     ua[2] = C_UA;
     ua[3] = BCC_UA;
     ua[4] = FLAG;
-    printf("ua values: %x, %x, %x, %x, %x\n", ua[0],ua[1],ua[2],ua[3],ua[4]);
-    printf("ua_function -> terminated\n");
 }
 
 void state_machine_set(int fd, char* set)
 {
-  printf("state_machine_set -> initializing\n");
   State state = STATE_MACHINE_START;
   int end = FALSE;
 
@@ -165,18 +170,14 @@ void state_machine_set(int fd, char* set)
     switch(state)
     {
       case STATE_MACHINE_START:
-        printf("case: STATE_MACHINE_START\n");
         if(c == FLAG)
         {
-          printf("state: FLAG\n");
           set[0] = c;
           state = FLAG_RCV;
         } break;
       case FLAG_RCV:
-        printf("case: FLAG_RCV\n");
         if(c == A_SET)
         {
-          printf("state: A\n");
           set[1] = c;
           state = A_RCV;
         }
@@ -186,16 +187,13 @@ void state_machine_set(int fd, char* set)
           state = STATE_MACHINE_START;
         } break;
       case A_RCV:
-        printf("case: A_RCV\n");
         if(c == C_SET)
         {
-          printf("state: C\n");
           set[2] = c;
           state = C_RCV;    
         }
         else if(c == FLAG)
         {
-          printf("state: FLAG\n");
           state= FLAG_RCV;
         }
         else
@@ -204,16 +202,13 @@ void state_machine_set(int fd, char* set)
           state = STATE_MACHINE_START;
         } break;
       case C_RCV:
-        printf("case: C_RCV\n");
         if(c == BCC_SET)
         {
-          printf("state: BBC\n");
           set[3] = c;
           state = BCC_OK;
         }
         else if(c == FLAG)
         {
-          printf("state: FLAG\n");
           state= FLAG_RCV;
         }
         else
@@ -222,10 +217,8 @@ void state_machine_set(int fd, char* set)
           state = STATE_MACHINE_START;
         } break;
       case BCC_OK:
-      printf("case: BCC_OK\n");
         if(c == FLAG)
         {
-          printf("state: FLAG\n");
           set[4] = c;
           state = STATE_MACHINE_STOP;       
         }
@@ -236,30 +229,24 @@ void state_machine_set(int fd, char* set)
         } break;
       case STATE_MACHINE_STOP: 
        end=TRUE; 
-       printf("state: STATE_MACHINE_STOP\n");
       break;
     }
   }
-  printf("state_machine -> terminated\n");
 }
 
 
 
 void set_function(char *set)
 {
-	printf("set_funtion -> initializing\n");
     set[0] = FLAG;
     set[1] = A_SET;
     set[2] = C_SET;
     set[3] = BCC_SET;
     set[4] = FLAG;
-    printf("set values: %x, %x, %x, %x, %x\n", set[0], set[1], set[2], set[3], set[4]);
-    printf("set_function -> terminated\n");
 }
 
 void state_machine_ua(int fd, char* ua)
 {
-	printf("state_machine_ua -> initializing\n");
 	State state = STATE_MACHINE_START;
 	int end = FALSE;
 
@@ -280,18 +267,14 @@ void state_machine_ua(int fd, char* ua)
 		switch(state)
 		{
 			case STATE_MACHINE_START:
-				printf("case: STATE_MACHINE_START\n");
 				if(c == FLAG)
 				{
-					printf("state: FLAG\n");
 					ua[0] = c;
 					state = FLAG_RCV;
 				} break;
 			case FLAG_RCV:
-				printf("case: FLAG_RCV\n");
 				if(c == A_UA)
 				{
-					printf("state: A\n");
 					ua[1] = c;
 					state = A_RCV;
 				}
@@ -301,16 +284,13 @@ void state_machine_ua(int fd, char* ua)
 					state = STATE_MACHINE_START;
 				} break;
 			case A_RCV:
-				printf("case: A_RCV\n");
 				if(c == C_UA)
 				{
-					printf("state: C\n");
 					ua[2] = c;
 					state = C_RCV;		
 				}
 				else if(c == FLAG)
 				{
-					printf("state: FLAG\n");
 					state= FLAG_RCV;
 				}
 				else
@@ -319,10 +299,8 @@ void state_machine_ua(int fd, char* ua)
 					state = STATE_MACHINE_START;
 				} break;
 			case C_RCV:
-				printf("case: C_RCV\n");
 				if(c == BCC_UA)
 				{
-					printf("state: BBC\n");
 					ua[3] = c;
 					state = BCC_OK;
 				}
@@ -337,10 +315,8 @@ void state_machine_ua(int fd, char* ua)
 					state = STATE_MACHINE_START;
 				} break;
 			case BCC_OK:
-				printf("case: BCC_OK\n");
 				if(c == FLAG)
 				{
-					printf("state: FLAG\n");
 					ua[4] = c;
 					state = STATE_MACHINE_STOP;				
 				}
@@ -351,10 +327,8 @@ void state_machine_ua(int fd, char* ua)
 				} break;
 			case STATE_MACHINE_STOP:
 			 end=TRUE;
-			 printf("state: STATE_MACHINE_STOP\n");
 			 break;
 
 		}
 	}
-	printf("state_machine -> terminated\n");
 }
