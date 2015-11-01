@@ -45,8 +45,9 @@ int llopen(int port_num, int flag)
     {
       res=llopen_reciever(fd);
     }
+	//printf("RESSSSSSSS%d\n", res);
     
-    if(res==6)
+    if(res==5)
     {
       printf("llopen terminated succesfully\n");
     }
@@ -79,7 +80,7 @@ int llopen_reciever(int fd)
 		return 0;
 	}
     	res=write(fd,ua,strlen(ua));
-	if(res != 6){
+	if(res != 5){
 	  if(try == 0){
 	   signal_set();
 	   try++;
@@ -116,7 +117,7 @@ int llopen_transmitter(int fd)
 
     	res = write(fd,set,strlen(set));
     //printf("%d bytes written\n", res);
-	if(res != 6){
+	if(res != 5){
 	  if(try == 0){
 	   signal_set();
 	   try++;

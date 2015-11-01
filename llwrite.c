@@ -24,12 +24,8 @@ int ini_link_layer(char* port,int baudrate, unsigned int role, int timeout){
 
 int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize){
 
-  printf("initiating create_frame function\n");
   buffer[0] = FLAG;
-  printf("%d\n", frame_type);
-  printf("%d\n", role);
   buffer[1] = A_DECIDE(frame_type, role);
-  printf("BUFFER[1]!!!!!!!!!!!!!!!!!%x\n", buffer[1]);
   if(frame_type == C_DISC || frame_type == C_SET || frame_type == C_UA)
     buffer[2] = frame_type;
   else if(frame_type == C_RR(0))
@@ -56,7 +52,13 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
   }else{
     buffer[4] = FLAG;
   }
-  printf("create_frame terminated succefully\n");
+  int i=0;
+  printf("---->");
+   for(i=0;i<datasize;i++)
+  {
+          printf(" %x ", data[i]);
+  }
+  printf("\n");
 return 4+datasize+2;
 }
 
@@ -107,7 +109,6 @@ int check_frame(char* frame, int framesize, int role, int frame_nr){
 }
 
 int stuffing(char** frame, int framesize){
-  printf("initiating stuffing function\n");
   int  newSize = framesize;
   int i=0;
 
@@ -116,11 +117,7 @@ int stuffing(char** frame, int framesize){
       newSize++;
      }
   }
-  printf("FRAME SIZE: %d\n", framesize);
-  printf("NEW SIZE: %d\n", newSize);
-  printf("FRAME [0] = %x\n", *frame[0]);
-  //*frame = (char*) realloc(*frame, newSize);
-  *frame = malloc(newSize);
+  *frame = (char*) realloc(*frame, newSize);
   for(i=1; i < newSize-2; i++){
     if( (*frame)[i] == FLAG || (*frame)[i] == ESCAPE ){
       memmove(*frame + i + 1, *frame + i, framesize - i);
@@ -130,7 +127,6 @@ int stuffing(char** frame, int framesize){
       (*frame)[i+1] ^= 0x20; 
      }
   }
-  printf("stuffing terminated succefully\n");
   return newSize;
 }
 
@@ -156,7 +152,6 @@ int destuffing(char** frame, int framesize){
 
 int llwrite(int fd, char* buffer, int length, int role)
 {
-  printf("initiating llwrite function\n");
   int try = 0, done_transfering =0;
   char* frame = malloc((DATASIZE+1)*2 + 4);
   while(!done_transfering){
@@ -168,20 +163,24 @@ int llwrite(int fd, char* buffer, int length, int role)
           printf("Max number of tries reached\n");
           return -1;
         }
-        printf("initiating sendframe test\n");
+        int i=0;
+        printf("-->");
+        for(i=0;i<length;i++)
+        {
+          printf(" %x ", buffer[i]);
+        }
+        printf("\n");
         int suc = sendframe(fd, frame, C_I(0), buffer, length, link_layer->sequenceNumber);
-        //int suc = sendframe(fd, frame, C_I(0), buffer, length, 0);
         if(try == 0){
           signal_set();
           if(!suc){
             try++;
           }
         }
-        char* received  = (char*) malloc((DATASIZE+1)*2 + 4);
+        char* received  = malloc((DATASIZE+1)*2 + 4);
         
-        printf("initiating receiveframe test\n");
         receiveframe(fd, received);
-        printf("NAAAAAAOOOOOOOO\n");
+        printf("TESTE\n");
         if(IS_RR(received[2])){
           signal_stop();
           done_transfering=1;
@@ -198,36 +197,50 @@ int llwrite(int fd, char* buffer, int length, int role)
 
 int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, int number){
 
-  printf("initiating sendframe function\n");
-  printf("initiating create_frame test\n");
+  int j=0;
+  printf("---> ");
+   for(j=0;j<datasize;j++)
+  {
+    printf(" %x ", data[j]);
+  }
+  printf("\n");
   int buffersize =  create_frame(buffer, link_layer->role, frame_type, number, data, datasize);
-  //int buffersize =  create_frame(buffer, 0, frame_type, number, data, datasize);
+  
+  printf("-----> ");
+   for(j=0;j<buffersize;j++)
+  {
+    printf(" %x ", buffer[j]);
+  }
+  printf("\n");
 
-  printf("initiating stuffing test\n");
   int framesize = stuffing(&buffer,  buffersize);
 
- printf("initiating write function\n");
- //printf("BUFFER[0] = %x\n", buffer[0]);
+  printf("------> ");
+   for(j=0;j<framesize;j++)
+  {
+    printf(" %x ", buffer[j]);
+  }
+  printf("\n");
+
  int res = write(fd, buffer, framesize);
+
+printf("REEEEEEES  %d\n", res);
 
   if(res != framesize){
     printf("error while sending file.\n");
     return 0;
   }
-  printf("sendframe terminated succefully\n");
   return 1;
 }
 
 
 int receiveframe(int fd, char* frame){
-  
-  printf("initiating receiveframe function\n");
   State state= START;
 
   int ind=0,try=0;
   int done = FALSE;
   while(!done){
-    char c = 1;
+    char c;
 
     if(state != STATE_MACHINE_STOP){
       if(try >= 3){
