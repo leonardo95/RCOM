@@ -104,7 +104,7 @@ int C_check(char c, int frame_nr);
 int stuffing(char** frame, int framesize);
 int destuffing(char** frame, int framesize);
 int receiveframe(int fd, char* frame);
-int retrievedata(char* frame, int frame_size);
+int retrievedata(char* frame, int frame_size, char* new_frame);
 int llread(int fd, char* buffer, int flag_type);
 int ini_link_layer(char* port,int baudrate, unsigned int role, int timeout);
 int receiveFile(int fd,int port);

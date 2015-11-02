@@ -59,7 +59,11 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
           printf(" %x ", data[i]);
   }
   printf("\n");
-return 4+datasize+2;
+  if(role==0)
+  {
+   return 4+datasize+1;
+  }
+   return 4+datasize+2;
 }
 
 int C_check(char c, int frame_nr){
@@ -112,13 +116,13 @@ int stuffing(char** frame, int framesize){
   int  newSize = framesize;
   int i=0;
 
-  for(i=1; i < framesize; i++){
+  for(i=4; i < framesize-1; i++){
      if( (*frame)[i] == FLAG || (*frame)[i] == ESCAPE ){
       newSize++;
      }
   }
   *frame = (char*) realloc(*frame, newSize);
-  for(i=1; i < newSize-2; i++){
+  for(i=4; i < newSize-1; i++){
     if( (*frame)[i] == FLAG || (*frame)[i] == ESCAPE ){
       memmove(*frame + i + 1, *frame + i, framesize - i);
       framesize++;
@@ -164,7 +168,7 @@ int llwrite(int fd, char* buffer, int length, int role)
           return -1;
         }
         int i=0;
-        printf("-->");
+        printf("-->\n");
         for(i=0;i<length;i++)
         {
           printf(" %x ", buffer[i]);
@@ -299,7 +303,8 @@ int receiveframe(int fd, char* frame){
         break;
         case C_RCV:
          printf("case: C_RCV\n");
-          if(frame[1]^frame[2]){
+	printf("AQUIIII %x\n", frame[1]^frame[2]);
+          if(!(frame[1]^frame[2])){
           ind++;
           frame[ind] = c; 
           state = BCC_OK;
@@ -341,6 +346,7 @@ int receiveframe(int fd, char* frame){
 
           //if(check_frame(frame, ind+1,1,0)){
             signal_stop();
+          printf("receiveframe terminated succefully\n");
 
             return ind;
           }else{
@@ -351,6 +357,5 @@ int receiveframe(int fd, char* frame){
             try++;
 
           }
-          printf("receiveframe terminated succefully\n");
           return 0;
 }

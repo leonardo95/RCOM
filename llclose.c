@@ -30,7 +30,7 @@ int llclose_transmitter(int fd)
 		printf("Maximum number of tries reached.\n");
 		return 0;
 	}
-	res = write(fd,disc,strlen(disc));   
+	res = write(fd,disc,5);   
 	printf("%d bytes written\n", res);
 	if(res != 5){
 	  if(try == 0){
@@ -48,7 +48,7 @@ int llclose_transmitter(int fd)
 		    
 	ua_function(ua);
 
-	res = write(fd,ua,strlen(ua)); 
+	res = write(fd,ua,5); 
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -83,7 +83,7 @@ int llclose_reciever(int fd)
 	
 	
 	disc_function(disc);
-    	res=write(fd,disc,strlen(disc));
+    	res=write(fd,disc,5);
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -158,7 +158,7 @@ void state_machine_disc(int fd, char* disc)
         }
         else
         {
-          memset(disc,0,strlen(disc));
+          memset(disc,0,5);
           state = STATE_MACHINE_START;
         } break;
       case A_RCV:
@@ -176,7 +176,7 @@ void state_machine_disc(int fd, char* disc)
         }
         else
         {
-          memset(disc,0,strlen(disc));
+          memset(disc,0,5);
           state = STATE_MACHINE_START;
         } break;
       case C_RCV:
@@ -194,7 +194,7 @@ void state_machine_disc(int fd, char* disc)
         }
         else
         {
-          memset(disc,0,strlen(disc));
+          memset(disc,0,5);
           state = STATE_MACHINE_START;
         } break;
       case BCC_OK:
@@ -207,7 +207,7 @@ void state_machine_disc(int fd, char* disc)
         }
         else
         {
-          memset(disc,0,strlen(disc));
+          memset(disc,0,5);
           state = STATE_MACHINE_START;
         } break;
       case STATE_MACHINE_STOP: 

@@ -10,7 +10,7 @@ int llopen(int port_num, int flag)
   sprintf(port_number, "%d", port_num);
   strcpy(port, "/dev/ttyS");
   strcat(port, port_number);
-    fd = open(port, O_RDWR | O_NOCTTY );
+    fd = open(port, O_RDWR | O_NOCTTY);
     if (fd <0) { perror(port); exit(-1); }
 
     if ( tcgetattr(fd,&oldtio) == -1) 
@@ -56,7 +56,7 @@ int llopen(int port_num, int flag)
       printf("llopen terminated unsuccesfully\n");
     }
 
-    tcsetattr(fd,TCSANOW,&oldtio);
+    //tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
     
   return fd;
@@ -79,7 +79,7 @@ int llopen_reciever(int fd)
 		printf("Maximum number of tries reached, aborting connection.\n");
 		return 0;
 	}
-    	res=write(fd,ua,strlen(ua));
+    	res=write(fd,ua,5);
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -115,7 +115,7 @@ int llopen_transmitter(int fd)
 		return 0;
 	}
 
-    	res = write(fd,set,strlen(set));
+    	res = write(fd,set,5);
     //printf("%d bytes written\n", res);
 	if(res != 5){
 	  if(try == 0){
@@ -182,7 +182,7 @@ void state_machine_set(int fd, char* set)
         }
         else
         {
-          memset(set,0,strlen(set));
+          memset(set,0,5);
           state = STATE_MACHINE_START;
         } break;
       case A_RCV:
@@ -197,7 +197,7 @@ void state_machine_set(int fd, char* set)
         }
         else
         {
-          memset(set,0,strlen(set));
+          memset(set,0,5);
           state = STATE_MACHINE_START;
         } break;
       case C_RCV:
@@ -212,7 +212,7 @@ void state_machine_set(int fd, char* set)
         }
         else
         {
-          memset(set,0,strlen(set));
+          memset(set,0,5);
           state = STATE_MACHINE_START;
         } break;
       case BCC_OK:
@@ -223,7 +223,7 @@ void state_machine_set(int fd, char* set)
         }
         else
         {
-          memset(set,0,strlen(set));
+          memset(set,0,5);
           state = STATE_MACHINE_START;
         } break;
       case STATE_MACHINE_STOP: 
@@ -279,7 +279,7 @@ void state_machine_ua(int fd, char* ua)
 				}
 				else
 				{
-					memset(ua,0,strlen(ua));
+					memset(ua,0,5);
 					state = STATE_MACHINE_START;
 				} break;
 			case A_RCV:
@@ -294,7 +294,7 @@ void state_machine_ua(int fd, char* ua)
 				}
 				else
 				{
-					memset(ua,0,strlen(ua));
+					memset(ua,0,5);
 					state = STATE_MACHINE_START;
 				} break;
 			case C_RCV:
@@ -310,7 +310,7 @@ void state_machine_ua(int fd, char* ua)
 				}
 				else
 				{
-					memset(ua,0,strlen(ua));
+					memset(ua,0,5);
 					state = STATE_MACHINE_START;
 				} break;
 			case BCC_OK:
@@ -321,7 +321,7 @@ void state_machine_ua(int fd, char* ua)
 				}
 				else
 				{
-					memset(ua,0,strlen(ua));
+					memset(ua,0,5);
 					state = STATE_MACHINE_START;
 				} break;
 			case STATE_MACHINE_STOP:

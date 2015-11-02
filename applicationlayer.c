@@ -26,7 +26,7 @@ int start_applicationlayer(char* port, int role, char* filename)
 		default:
 			break;
 
-	}
+	} 
 
 	llclose(app_layer->fileDescriptor, app_layer->status);
 
@@ -67,19 +67,19 @@ int packetControl_send(int fd,int C, int role, char* filename, char* filesize)
 	printf("\n");
 
 	llwrite(fd, packControl, packSize, role);
-	return 0;
+	return 1;
 }
 
 //retorna tamanho do ficheiro
 int packageControl_recieve(int fd, int role, int* packet_type, char** filename, int* filelength)
 {
-	char* packet;
+	char* packet = malloc((DATASIZE+1)*2 + 4);
 	llread(fd, packet,role);
 	int i=0, pos =1;
 		*packet_type = packet[pos];
 		pos++;
 
-		if(packet_type != FILE_SIZE_CONTROL){
+		if(packet[pos] != FILE_SIZE_CONTROL){
 			printf("error: expected file size.");
 			return 0;
 		}
@@ -95,10 +95,10 @@ int packageControl_recieve(int fd, int role, int* packet_type, char** filename, 
 
 		*filelength = atoi(length);
 
-		*packet_type = packet[pos];
-		pos++;
+		//*packet_type = packet[pos];
+		//pos++;
 
-		if(*packet_type != FILE_NAME_CONTROL){
+		if(packet[pos]!=FILE_NAME_CONTROL){
 			printf("error: expected file name.");
 			return 0;
 		}
@@ -221,7 +221,7 @@ int sendFile(int fd, char* filename) {
 int receiveFile(int fd,int port){
 
 	int packet_start, filesize;
-	char* filename;
+	char* filename=malloc(100);
 	if(!packageControl_recieve(fd, link_layer->role, &packet_start, &filename, &filesize)){
 		printf("error receiving start control packet\n");
 		return 0;
