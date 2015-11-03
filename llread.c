@@ -25,7 +25,7 @@ int llread(int fd, char* buffer, int flag_type)
 					char nulo[1];
 					nulo[0] = '\0';
 					
-					sendframe(fd, new_buf, C_RR(0), nulo, 0, link_layer->sequenceNumber);
+					sendframe(fd, new_buf, C_RR(link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
 					
 					if(link_layer->sequenceNumber == 0){
 		              link_layer->sequenceNumber =1;

@@ -28,13 +28,13 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
   buffer[1] = A_DECIDE(frame_type, role);
   if(frame_type == C_DISC || frame_type == C_SET || frame_type == C_UA)
     buffer[2] = frame_type;
-  else if(frame_type == C_RR(0))
+  else if(frame_type == C_RR(0) || frame_type == C_RR(1))
   {
     buffer[2] = C_RR(frame_nr);
   }
-  else if(frame_type == C_REJ(0))
+  else if(frame_type == C_REJ(0) || frame_type == C_RR(1))
     buffer[2] = C_REJ(frame_nr);
-  else if(frame_type == C_I(0))
+  else if(frame_type == C_I(0) || frame_type == C_RR(1))
     buffer[2] = C_I(frame_nr);
 
   buffer[3] = buffer[1] ^ buffer[2];
@@ -68,8 +68,8 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
 
 int C_check(char c, int frame_nr){
   if(c != C_REJ(frame_nr) && c != C_RR(!frame_nr) && c != C_I(0) && c != C_I(1) && c != C_SET && c != C_UA  && c != C_DISC)
-    return -1;
-  else return 0;
+    return 0;
+  else return 1;
 }
 
 int check_frame(char* frame, int framesize, int role, int frame_nr){
@@ -83,7 +83,6 @@ int check_frame(char* frame, int framesize, int role, int frame_nr){
     printf("wrong A\n" );
     return 0;
   }
-
   if(C_check(frame[2] , frame_nr)){
     printf("wrong C\n");
   }
@@ -169,12 +168,13 @@ int llwrite(int fd, char* buffer, int length, int role)
         }
         int i=0;
         printf("-->\n");
+	printf("%d\n", length);
         for(i=0;i<length;i++)
         {
           printf(" %x ", buffer[i]);
         }
         printf("\n");
-        int suc = sendframe(fd, frame, C_I(0), buffer, length, link_layer->sequenceNumber);
+        int suc = sendframe(fd, frame, C_I(link_layer->sequenceNumber), buffer, length, link_layer->sequenceNumber);
         if(try == 0){
           signal_set();
           if(!suc){
@@ -182,7 +182,6 @@ int llwrite(int fd, char* buffer, int length, int role)
           }
         }
         char* received  = malloc((DATASIZE+1)*2 + 4);
-        
         receiveframe(fd, received);
         printf("TESTE\n");
         if(IS_RR(received[2])){

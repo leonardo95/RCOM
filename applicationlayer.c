@@ -131,7 +131,7 @@ int sendDataPacket(int fd, int N, char* buffer, int length){
 	packet[3] = length % 256;	//L1
 
 	memcpy(&packet[4], buffer, length);
-
+	printf("TSDP\n");
 	if(!llwrite(fd, packet, packetsize, link_layer->role)){
 		free(packet);
 
@@ -194,7 +194,7 @@ int sendFile(int fd, char* filename) {
 	char* filebuffer = malloc(DATASIZE);
 
 
-
+	
 	while( (sizeread = fread(filebuffer,sizeof(char), DATASIZE, file)) > 0 ){
 
 		if(!sendDataPacket(fd, N % 255, filebuffer, sizeread)){
