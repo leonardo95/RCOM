@@ -2,8 +2,7 @@
 
 int main(int argc, char** argv)
 {
-
-	printf("SIMMMMM\n");
+	
  link_layer = &link_layerInit;
   //int fd=0;
   char* port=argv[1];

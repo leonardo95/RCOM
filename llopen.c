@@ -26,16 +26,15 @@ int llopen(int port_num, int flag)
     newtio.c_lflag = 0;
     newtio.c_cc[VTIME]    = 0;
     newtio.c_cc[VMIN]     = 1;
-    
+
     tcflush(fd, TCIOFLUSH);
     if ( tcsetattr(fd,TCSANOW,&newtio) == -1) 
     {
       perror("tcsetattr");
       exit(-1);
     }
-
     printf("New termios structure set\n");
-    
+
     if(flag==0)
     {
       res=llopen_transmitter(fd);

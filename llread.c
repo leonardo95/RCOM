@@ -2,54 +2,68 @@
 
 int llread(int fd, char* buffer, int flag_type)
 {
-	int reading=TRUE, res=0;
+	int reading=TRUE;
 	char* frame=malloc((DATASIZE+1)*2 + 4);
+	
 	char* new_buf=malloc(10);
-	//signal_set();
-
 	while(reading==TRUE)
 	{	
 		int frame_size = receiveframe(fd, frame);
-		if(res==0)
-		{
-			if(IS_I(frame[2])){
-				if(GET_C(frame[2]) == link_layer->sequenceNumber)
-				{
-					char* frame_data=malloc(frame_size);
-					frame_data=frame;
+		if (frame_size == -1) {
+			printf("Nothing received or received with errors.\n");
+		}
 
-					char* new_frame=malloc(frame_size - 5);
-					int frame_data_size = retrievedata(frame_data, frame_size, new_frame);				
-					memcpy(buffer, frame_data, frame_data_size+6);
-					
-					char nulo[1];
-					nulo[0] = '\0';
-					
-					sendframe(fd, new_buf, C_RR(link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
-					
-					if(link_layer->sequenceNumber == 0){
-		              link_layer->sequenceNumber =1;
-		            }else if(link_layer->sequenceNumber == 1){
-		              link_layer->sequenceNumber =0;
-		            }
-					return frame_size;
-				}
-				else
-				{
-					char nulo[1];
-					nulo[0] = '\0';
-					sendframe(fd, new_buf, C_REJ(!link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
-				}
-			}
-			if(frame[2]==C_SET)
+		if(IS_I(frame[2])){
+		printf("sn: %d\n", link_layer->sequenceNumber);
+			if(GET_C(frame[2]) == link_layer->sequenceNumber)
 			{
-				char ua[5];
-				ua_function(ua);
-				res=write(fd,ua,5);
-				return res;
+				char* frame_data = frame;
+				printf("Aqui 1 \n");
+				int frame_data_size = retrievedata(frame_data, frame_size, buffer);
+				printf("Aqui 2 \n");
+				int w = 0;
+for (; w < frame_data_size; w++) printf("%x ", buffer[w]); printf("\n");
+				
+				char nulo[1];
+				nulo[0] = '\0';
+			
+				printf("TESTE1\n");
+				if(link_layer->sequenceNumber == 0){
+	            			  link_layer->sequenceNumber =1;
+					
+	            		}else if(link_layer->sequenceNumber == 1)
+				{
+	              			link_layer->sequenceNumber =0;
+	            		}
+				
+
+				sendframe(fd, new_buf, C_RR(link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
+				printf("llread 1\n");
+					
+
+				return frame_size;
+			}
+			else
+			{	
+				char nulo[1];
+				nulo[0] = '\0';
+				sendframe(fd, new_buf, C_REJ(link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
+				printf("---------------TESTE2\n");
+				
+				
 			}
 		}
+		if(frame[2]==C_SET)
+		{
+			printf("llread 3\n");
+			char ua[5];
+			ua_function(ua);
+	
+			return write(fd,ua,5);
+		}
+		
 	}
+		printf("llread 2\n");
 	return -1;
 }
 

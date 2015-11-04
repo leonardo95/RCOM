@@ -141,7 +141,7 @@ void state_machine_disc(int fd, char* disc)
     switch(state)
     {
       case STATE_MACHINE_START:
-        printf("case: STATE_MACHINE_START\n");
+        //printf("case: STATE_MACHINE_START1\n");
         if(c == FLAG)
         {
           printf("state: FLAG\n");

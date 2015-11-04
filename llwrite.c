@@ -27,18 +27,28 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
   buffer[0] = FLAG;
   buffer[1] = A_DECIDE(frame_type, role);
   if(frame_type == C_DISC || frame_type == C_SET || frame_type == C_UA)
+{
     buffer[2] = frame_type;
+	printf("TESTE1\n");
+}
   else if(frame_type == C_RR(0) || frame_type == C_RR(1))
   {
     buffer[2] = C_RR(frame_nr);
+	printf("TESTE2\n");
   }
-  else if(frame_type == C_REJ(0) || frame_type == C_RR(1))
-    buffer[2] = C_REJ(frame_nr);
-  else if(frame_type == C_I(0) || frame_type == C_RR(1))
+  else if(frame_type == C_REJ(0) || frame_type == C_REJ(1))
+{
+    buffer[2] = C_REJ(!frame_nr);
+	printf("TESTE3\n");
+}
+  else if(frame_type == C_I(0) || frame_type == C_I(1))
+{
     buffer[2] = C_I(frame_nr);
+	printf("TESTE4\n");
+}
 
   buffer[3] = buffer[1] ^ buffer[2];
-  if(frame_type == C_I(0)){
+  if(frame_type == C_I(0) || frame_type == C_I(1)){
     memcpy(buffer + 4, data, datasize);
   
     char bcc2 =0;
@@ -53,7 +63,7 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
     buffer[4] = FLAG;
   }
   int i=0;
-  printf("---->");
+  printf("<---->");
    for(i=0;i<datasize;i++)
   {
           printf(" %x ", data[i]);
@@ -61,13 +71,14 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
   printf("\n");
   if(role==0)
   {
-   return 4+datasize+1;
+	return 4+datasize+1;
   }
-   return 4+datasize+2;
+	return 4+datasize+2;
 }
 
 int C_check(char c, int frame_nr){
-  if(c != C_REJ(frame_nr) && c != C_RR(!frame_nr) && c != C_I(0) && c != C_I(1) && c != C_SET && c != C_UA  && c != C_DISC)
+printf("0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X, 0x%X\n", C_REJ(frame_nr), C_RR(frame_nr), C_I(0), C_I(1), C_SET, C_UA, C_DISC);
+  if(c != C_REJ(frame_nr) && c != C_RR(frame_nr) && c != C_I(0) && c != C_I(1) && c != C_SET && c != C_UA  && c != C_DISC)
     return 0;
   else return 1;
 }
@@ -83,7 +94,8 @@ int check_frame(char* frame, int framesize, int role, int frame_nr){
     printf("wrong A\n" );
     return 0;
   }
-  if(C_check(frame[2] , frame_nr)){
+
+  if(!C_check(frame[2] , frame_nr)){
     printf("wrong C\n");
   }
 
@@ -115,7 +127,7 @@ int stuffing(char** frame, int framesize){
   int  newSize = framesize;
   int i=0;
 
-  for(i=4; i < framesize-1; i++){
+  for(i=4; i < framesize - 1; i++){
      if( (*frame)[i] == FLAG || (*frame)[i] == ESCAPE ){
       newSize++;
      }
@@ -168,13 +180,14 @@ int llwrite(int fd, char* buffer, int length, int role)
         }
         int i=0;
         printf("-->\n");
-	printf("%d\n", length);
         for(i=0;i<length;i++)
         {
           printf(" %x ", buffer[i]);
         }
         printf("\n");
         int suc = sendframe(fd, frame, C_I(link_layer->sequenceNumber), buffer, length, link_layer->sequenceNumber);
+	printf("llwrite 1\n");
+	
         if(try == 0){
           signal_set();
           if(!suc){
@@ -182,9 +195,17 @@ int llwrite(int fd, char* buffer, int length, int role)
           }
         }
         char* received  = malloc((DATASIZE+1)*2 + 4);
+        
         receiveframe(fd, received);
-        printf("TESTE\n");
+        
         if(IS_RR(received[2])){
+	  if(link_layer->sequenceNumber == 0){
+	            			  link_layer->sequenceNumber =1;
+					
+	            		}else if(link_layer->sequenceNumber == 1)
+				{
+	              			link_layer->sequenceNumber =0;
+	            		}
           signal_stop();
           done_transfering=1;
         
@@ -199,7 +220,6 @@ int llwrite(int fd, char* buffer, int length, int role)
 }
 
 int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, int number){
-
   int j=0;
   printf("---> ");
    for(j=0;j<datasize;j++)
@@ -217,7 +237,6 @@ int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, in
   printf("\n");
 
   int framesize = stuffing(&buffer,  buffersize);
-
   printf("------> ");
    for(j=0;j<framesize;j++)
   {
@@ -233,6 +252,7 @@ printf("REEEEEEES  %d\n", res);
     printf("error while sending file.\n");
     return 0;
   }
+	printf("RETURN\n");
   return 1;
 }
 
@@ -253,108 +273,38 @@ int receiveframe(int fd, char* frame){
 
       }
       int res = read(fd, &c, 1);
-      printf("%x\n", c);
+      //printf("%x\n", c);
       if(res == 0){
         printf("nothing received.\n");
-        return ind;
+        return -1;
       }
     }
 
     switch (state) {
       case START: 
-      printf("case: STATE_MACHINE_START\n");
-        if(c == FLAG){
+      	//printf("case: STATE_MACHINE_START\n");
+        if(c == FLAG)
+	{
           printf("state: FLAG\n");
           state = FLAG_RCV;
 
-          //ind++;
           frame[ind] = c;
+	  ind++;
         }
         break;
       case FLAG_RCV:
-      printf("case: FLAG_RCV\n");
-        if(c == A_UA){
-          printf("state: A\n");
-          state = A_RCV;
-          ind++;
-          frame[ind] = c;
-        }else if(c != FLAG){
-          ind =0;
-          state = START;
-        }
-        break;
-      case A_RCV:
-      printf("case: A_RCV\n");
-        if(c != FLAG){
-          printf("state: C\n");
-          state = C_RCV;
-          ind++;
-          frame[ind] = c;
-        }
-        else if(c == FLAG){
-          printf("state: FLAG\n");
-          ind = 1;
-          state = FLAG_RCV;
-        }else{
-          ind = 0;
-          state = START;
-        }
-        break;
-        case C_RCV:
-         printf("case: C_RCV\n");
-	printf("AQUIIII %x\n", frame[1]^frame[2]);
-          if(!(frame[1]^frame[2])){
-          ind++;
-          frame[ind] = c; 
-          state = BCC_OK;
-          }
-          else if (c == FLAG){
-            printf("state: FLAG\n");
-          ind = 1;
-          state = FLAG_RCV;
-          } else{
-            ind = 0;
-            state = START;
-          }
-          break;
-          break;
-          case BCC_OK:
-           printf("case: BCC_OK\n");
-            if(c == FLAG){
-               ind++;
-              frame[ind] = c;
-              state = STATE_MACHINE_STOP;
-            }
-            else if (c != FLAG){
-              ind++;
-              frame[ind] = c; 
-            }
-            break;
-          case STATE_MACHINE_STOP:
-
-       printf("state: STATE_MACHINE_STOP\n");
-              done = TRUE;
-              break;
-          default:
-              break;
-            }
-          }
-
-          printf("initiating check_frame test\n");
-          if(check_frame(frame, ind+1,link_layer->role,link_layer->sequenceNumber)){
-
-          //if(check_frame(frame, ind+1,1,0)){
-            signal_stop();
-          printf("receiveframe terminated succefully\n");
-
-            return ind;
-          }else{
-
-            if(try == 0){
-              signal_set();
-            }
-            try++;
-
-          }
-          return 0;
+	frame[ind]=c;
+	ind++;
+	if(c==FLAG)
+	{
+	  state=STATE_MACHINE_STOP;
+	  done=TRUE;
+	}
+	break;
+      default:
+	printf("Erro\n");
+	break;
+	}
+    }
+          return ind;
 }
