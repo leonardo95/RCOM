@@ -4,11 +4,11 @@ int llclose(int fd, int type)
 {
   int res=0;
   
-  if(type==0)
+  if(type==1)
   {
   res=llclose_transmitter(fd); 
   }
-  else if(type==1)
+  else if(type==0)
   {
     res=llclose_reciever(fd);
   }
@@ -30,7 +30,8 @@ int llclose_transmitter(int fd)
 		printf("Maximum number of tries reached.\n");
 		return 0;
 	}
-	res = write(fd,disc,5);   
+	res = write(fd,disc,5);
+	stat_send_disc++;
 	printf("%d bytes written\n", res);
 	if(res != 5){
 	  if(try == 0){
@@ -44,11 +45,15 @@ int llclose_transmitter(int fd)
 	}
 
 	state_machine_disc(fd, disc);
-
+	stat_rec_disc++;
 		    
 	ua_function(ua);
+printf("%x\n", ua[0]);
 
-	res = write(fd,ua,5); 
+	res = write(fd,ua,5);
+sleep(1);
+
+	stat_send_ua++;
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -80,10 +85,11 @@ int llclose_reciever(int fd)
 		return 0;
 	}
     	state_machine_disc(fd, disc);
-	
+	stat_rec_disc++;
 	
 	disc_function(disc);
     	res=write(fd,disc,5);
+	stat_send_disc++;
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -98,7 +104,7 @@ int llclose_reciever(int fd)
 	disconnected= TRUE;
 
     	state_machine_ua(fd, ua);	
-	
+	stat_rec_ua++;
 	}    
 
     sleep(1);

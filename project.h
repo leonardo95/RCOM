@@ -52,7 +52,6 @@
 
 #define ISREPLY(c) (c == C_UA || IS_RR(c) || IS_REJ(c) )
 
-//#define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x03 : 0x01) : ( ISREPLY(c)? 0x03 : 0x01)
 #define A_DECIDE(c, role) role == TRANSMITER ? (ISCOMAND(c)? 0x01 : 0x03) : ( ISREPLY(c)? 0x01 : 0x03)
 typedef enum {
 	STATE_MACHINE_START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STATE_MACHINE_STOP
@@ -80,6 +79,20 @@ linkLayer link_layerInit;
 linkLayer* link_layer;
 
 int alarm_off;
+int stat_send_set;
+int stat_send_ua;
+int stat_send_disc;
+int stat_send_control;
+int stat_send_i;
+int stat_send_rr;
+int stat_send_rej;
+int stat_rec_set;
+int stat_rec_ua;
+int stat_rec_disc;
+int stat_rec_control;
+int stat_rec_rr;
+int stat_rec_rej;
+int stat_rec_i;
 
 void set_function(char *set);
 void state_machine_ua(int fd, char* ua);
@@ -102,7 +115,7 @@ int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, in
 int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* data, int datasize);
 int C_check(char c, int frame_nr);
 int stuffing(char** frame, int framesize);
-int destuffing(char** frame, int framesize);
+int destuffing(char** frame, int framesize, char* packet);
 int receiveframe(int fd, char* frame);
 int retrievedata(char* frame, int frame_size, char* new_frame);
 int llread(int fd, char* buffer, int flag_type);
@@ -110,3 +123,4 @@ int ini_link_layer(char* port,int baudrate, unsigned int role, int timeout);
 int receiveFile(int fd,int port);
 int sendFile(int fd, char* filename);
 int start_applicationlayer(char* port, int role, char* filename);
+void stats();

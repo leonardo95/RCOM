@@ -34,11 +34,13 @@ int create_frame(char * buffer, int role, int frame_type, int frame_nr, char* da
   else if(frame_type == C_RR(0) || frame_type == C_RR(1))
   {
     buffer[2] = C_RR(frame_nr);
+    stat_send_rr++;
 	printf("TESTE2\n");
   }
   else if(frame_type == C_REJ(0) || frame_type == C_REJ(1))
 {
     buffer[2] = C_REJ(!frame_nr);
+    stat_send_rej++;
 	printf("TESTE3\n");
 }
   else if(frame_type == C_I(0) || frame_type == C_I(1))
@@ -146,22 +148,26 @@ int stuffing(char** frame, int framesize){
 }
 
 
-int destuffing(char** frame, int framesize){
+int destuffing(char** frame, int framesize, char* packet){
   printf("initiating destuffing function\n");
-  int i=0;
-  for(i=1; i< framesize; i++){
-    if( (*frame)[i] == ESCAPE ){
-      memmove(*frame +i , *frame + i + 1, framesize -i -1);
-
-      framesize--;
-
-      (*frame)[i] ^= 0x20;
-    }
+  int i=0; 
+  int size=0;
+  for(i=4; i<= framesize; i++){
+    if((*frame)[i] == ESCAPE )
+	{
+		i++;
+     		packet[size]=(*frame)[i] ^0x20;
+		size++;      
+    	}
+	else
+	{
+	packet[size]=(*frame)[i];
+	size++;
+	}
   }
 
-  *frame = (char*) realloc(*frame, framesize);
   printf("destuffing terminated succefully\n");
-  return framesize;
+  return size;
 }
 
 
@@ -186,6 +192,7 @@ int llwrite(int fd, char* buffer, int length, int role)
         }
         printf("\n");
         int suc = sendframe(fd, frame, C_I(link_layer->sequenceNumber), buffer, length, link_layer->sequenceNumber);
+	stat_send_i++;
 	printf("llwrite 1\n");
 	
         if(try == 0){
@@ -199,6 +206,7 @@ int llwrite(int fd, char* buffer, int length, int role)
         receiveframe(fd, received);
         
         if(IS_RR(received[2])){
+	  stat_rec_rr++;
 	  if(link_layer->sequenceNumber == 0){
 	            			  link_layer->sequenceNumber =1;
 					
@@ -210,6 +218,7 @@ int llwrite(int fd, char* buffer, int length, int role)
           done_transfering=1;
         
         }else if(IS_REJ(received[2])){
+	  stat_rec_rej++;
           signal_stop();
           try =0;
         }
@@ -245,7 +254,7 @@ int sendframe(int fd, char* buffer, int frame_type, char* data, int datasize, in
   printf("\n");
 
  int res = write(fd, buffer, framesize);
-
+stuffing(&buffer,  buffersize);
 printf("REEEEEEES  %d\n", res);
 
   if(res != framesize){
@@ -306,5 +315,10 @@ int receiveframe(int fd, char* frame){
 	break;
 	}
     }
+	//char* packet = malloc((DATASIZE+1)*2 + 4);
+	//destuffing(&frame, ind, packet);
+	//printf("teste1\n");
+	//memcpy(frame, packet, ind);
+	//printf("teste2\n");
           return ind;
 }

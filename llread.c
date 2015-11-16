@@ -38,6 +38,7 @@ for (; w < frame_data_size; w++) printf("%x ", buffer[w]); printf("\n");
 				
 
 				sendframe(fd, new_buf, C_RR(link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
+				stat_send_rr++;
 				printf("llread 1\n");
 					
 
@@ -49,7 +50,7 @@ for (; w < frame_data_size; w++) printf("%x ", buffer[w]); printf("\n");
 				nulo[0] = '\0';
 				sendframe(fd, new_buf, C_REJ(link_layer->sequenceNumber), nulo, 0, link_layer->sequenceNumber);
 				printf("---------------TESTE2\n");
-				
+				stat_send_rej++;
 				
 			}
 		}

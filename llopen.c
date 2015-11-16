@@ -35,12 +35,12 @@ int llopen(int port_num, int flag)
     }
     printf("New termios structure set\n");
 
-    if(flag==0)
+    if(flag==1)
     {
       res=llopen_transmitter(fd);
 
     }
-    else if(flag==1)
+    else if(flag==0)
     {
       res=llopen_reciever(fd);
     }
@@ -71,7 +71,7 @@ int llopen_reciever(int fd)
     ua_function(ua);
 
     state_machine_set(fd, set);
-	
+    stat_rec_set++;	
     while(!connected){
 	if(try >= 3){
 		signal_stop();
@@ -79,6 +79,7 @@ int llopen_reciever(int fd)
 		return 0;
 	}
     	res=write(fd,ua,5);
+	stat_send_ua++;
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -115,6 +116,7 @@ int llopen_transmitter(int fd)
 	}
 
     	res = write(fd,set,5);
+	stat_send_set++;
     //printf("%d bytes written\n", res);
 	if(res != 5){
 	  if(try == 0){
@@ -131,7 +133,8 @@ int llopen_transmitter(int fd)
 	}
     	//printf("%d bytes written\n", res);
     }
-    state_machine_ua(fd, ua); 
+    state_machine_ua(fd, ua);
+    stat_rec_ua++;
     sleep(1);
 
     return res;

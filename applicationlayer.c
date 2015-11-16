@@ -27,7 +27,7 @@ int start_applicationlayer(char* port, int role, char* filename)
 			break;
 
 	}
-
+	printf("Start App - End \n");
 	llclose(app_layer->fileDescriptor, app_layer->status);
 
 
@@ -67,6 +67,7 @@ int packetControl_send(int fd,int C, int role, char* filename, char* filesize)
 	printf("\n");
 
 	llwrite(fd, packControl, packSize, role);
+	stat_send_control++;
 	return 1;
 }
 
@@ -122,6 +123,7 @@ int packageControl_recieve(int fd, int role, int* packet_type, char* filename, i
 	}
 	printf("\n");
 	printf("package control receive 8\n");
+	stat_rec_control++;
 	return 1;
 
 }
@@ -148,6 +150,13 @@ int sendDataPacket(int fd, int N, char* buffer, int length){
 
 		return 0;
 	}
+int i = 0;
+printf("AQUI\n");
+for(; i < packetsize;i++)
+{
+printf("%x",packet[i]);
+} 
+printf("\n");
 
 	free(packet);
 
@@ -166,6 +175,7 @@ int receiveDataPacket(int fd, int* N, char** buffer, int* length){
 		return 0;
 	}
 	printf("receiveDataPacket 3\n");
+	printf("packet=%x\n",packet[0]);
 	if(packet[0] != 0){
 		printf("error: not a data packet\n");
 		return 0;
@@ -177,7 +187,7 @@ int receiveDataPacket(int fd, int* N, char** buffer, int* length){
 	printf("receiveDataPacket 6\n");
 	printf("length: %d\n",*length);
 	printf("packet[4]: %s\n",&packet[4]);
-	memcpy(*buffer, &packet[4], *length-5);
+	memcpy(*buffer, &packet[4], *length);
 	printf("receiveDataPacket 7\n");
 	return 1;
 
@@ -269,7 +279,7 @@ int receiveFile(int fd,int port){
 	int packet_end;
 
 
-	if(!packageControl_recieve(fd, link_layer->role, &packet_end, NULL, 0)){
+	if(!packageControl_recieve(fd, link_layer->role, &packet_end, filename, &filesize)){
 		printf("error receiving end control packet\n");
 		return 0;
 	}
