@@ -2,10 +2,9 @@
 
 int llopen(int port_num, int flag)
 {
-  printf("llopen initiated succesfully\n");
   char port[255];
   struct termios oldtio,newtio;
-  int fd, res=0;
+  int fd;
   char port_number[255];
   sprintf(port_number, "%d", port_num);
   strcpy(port, "/dev/ttyS");
@@ -33,29 +32,17 @@ int llopen(int port_num, int flag)
       perror("tcsetattr");
       exit(-1);
     }
-    printf("New termios structure set\n");
 
     if(flag==1)
     {
-      res=llopen_transmitter(fd);
+      llopen_transmitter(fd);
 
     }
     else if(flag==0)
     {
-      res=llopen_reciever(fd);
+      llopen_reciever(fd);
     }
-	//printf("RESSSSSSSS%d\n", res);
     
-    if(res==5)
-    {
-      printf("llopen terminated succesfully\n");
-    }
-    else
-    {
-      printf("llopen terminated unsuccesfully\n");
-    }
-
-    //tcsetattr(fd,TCSANOW,&oldtio);
     sleep(1);
     
   return fd;
@@ -92,10 +79,8 @@ int llopen_reciever(int fd)
 	}else{
 	
           connected= TRUE;
-	  //printf("Connection established succesfully.\n");
 	}
     }
-    //printf("%d bytes written\n", res);
     sleep(1);
 
     return res;
@@ -117,7 +102,6 @@ int llopen_transmitter(int fd)
 
     	res = write(fd,set,5);
 	stat_send_set++;
-    //printf("%d bytes written\n", res);
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -129,9 +113,7 @@ int llopen_transmitter(int fd)
 	  }
 	}else{
 	  connected = TRUE;
-	  //printf("Connection established succesfully.\n");
 	}
-    	//printf("%d bytes written\n", res);
     }
     state_machine_ua(fd, ua);
     stat_rec_ua++;

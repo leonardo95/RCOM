@@ -27,7 +27,6 @@ int start_applicationlayer(char* port, int role, char* filename)
 			break;
 
 	}
-	printf("Start App - End \n");
 	llclose(app_layer->fileDescriptor, app_layer->status);
 
 
@@ -59,12 +58,6 @@ int packetControl_send(int fd,int C, int role, char* filename, char* filesize)
 	{
 		packControl[counter++]=filename[i];
 	}
-	printf("-> ");
-	for(i=0;i<packSize;i++)
-	{
-		printf(" %x ", packControl[i]);
-	}
-	printf("\n");
 
 	llwrite(fd, packControl, packSize, role);
 	stat_send_control++;
@@ -74,28 +67,20 @@ int packetControl_send(int fd,int C, int role, char* filename, char* filesize)
 //retorna tamanho do ficheiro
 int packageControl_recieve(int fd, int role, int* packet_type, char* filename, int* filelength)
 {
-	printf("package control receive 1\n");
+
 	char* packet = malloc((DATASIZE+1)*2 + 4);
-	printf("package control receive 2\n");
+
 	llread(fd, packet,role);
-	printf("package control receive 3\n");
+
 	int i=0, pos =0;
-	for(;i<(DATASIZE+1)*2 + 4;i++)
-	{
-	  printf("%x ", packet[i]);
-	}
-	printf("\n");
-	i=0;
 		
 	*packet_type = packet[pos];		
 	pos++;
-	printf("package control receive 4\n");
 	if(packet[pos] != FILE_SIZE_CONTROL){
 		printf("error: expected file size.");
 		return 0;
 	}
-	pos++;
-	printf("package control receive 5\n");	
+	pos++;	
 	int numbytes = (int)packet[pos];
 	pos++;
 	char length[numbytes];
@@ -103,26 +88,18 @@ int packageControl_recieve(int fd, int role, int* packet_type, char* filename, i
 		length[i] = packet[i+pos];
 	}
 	pos += i;
-	printf("package control receive 6\n");
 	*filelength = atoi(length);
-	printf("FILENLENGTH: %d\n", *filelength);
-	printf("packet pos: %x\n", packet[pos]);
-	printf("FILE NAME CONTROL: %x\n", FILE_NAME_CONTROL);
 	if(packet[pos]!=FILE_NAME_CONTROL){
 		printf("error: expected file name.\n");
 		
 		return 0;
 	}
 	pos++;
-	printf("package control receive 7\n");
 	numbytes = packet[pos];
-	printf("%d\n", numbytes);
 	pos++;
 	for(i=0; i < numbytes; i++){
 		filename[i] = packet[i+pos];
 	}
-	printf("\n");
-	printf("package control receive 8\n");
 	stat_rec_control++;
 	return 1;
 
@@ -150,13 +127,6 @@ int sendDataPacket(int fd, int N, char* buffer, int length){
 
 		return 0;
 	}
-int i = 0;
-printf("AQUI\n");
-for(; i < packetsize;i++)
-{
-printf("%x",packet[i]);
-} 
-printf("\n");
 
 	free(packet);
 
@@ -167,51 +137,37 @@ printf("\n");
 int receiveDataPacket(int fd, int* N, char** buffer, int* length){
 
 	char* packet=(char*) malloc(*length);
-	printf("receiveDataPacket 1\n");
 	unsigned int packetsize = llread(fd, packet, app_layer->status);
-	printf("receiveDataPacket 2\n");
 	if(packetsize < 0){
 		printf(" error reading data packet\n");
 		return 0;
 	}
-	printf("receiveDataPacket 3\n");
-	printf("packet=%x\n",packet[0]);
 	if(packet[0] != 0){
 		printf("error: not a data packet\n");
 		return 0;
 	}
-	printf("receiveDataPacket 4\n");
 	*N = (char) packet[1];
-	printf("receiveDataPacket 5\n");
 	*length = 256 * packet[2] + packet[3]; // K = 256 * L2 + L1
-	printf("receiveDataPacket 6\n");
-	printf("length: %d\n",*length);
-	printf("packet[4]: %s\n",&packet[4]);
 	memcpy(*buffer, &packet[4], *length);
-	printf("receiveDataPacket 7\n");
 	return 1;
 
 }
 
 
 int sendFile(int fd, char* filename) {
-	printf("SENDING FILE\n");
 
 	FILE* file = fopen(filename, "rb");
 
 	int sizeread =0 , N =0;
 	fseek(file, 0L, SEEK_END);
 	unsigned int size = ftell(file);
-	printf("FILE SIZE: %d \n", size);
 	fseek(file, 0L, SEEK_SET);
 	char fileSize[sizeof(int) *3 +2] = "";
 	snprintf(fileSize, sizeof fileSize, "%d", size);
-	printf("%s \n", fileSize);
 	if(!packetControl_send(fd, CONTROL_START,  link_layer->role, filename, fileSize) ){
 		printf("error sending start control packet\n");
 		return 0;
 	}
-	printf("PACKAGE CONTROL SENT\n");
 	char* filebuffer = malloc(DATASIZE);
 
 
@@ -233,7 +189,6 @@ int sendFile(int fd, char* filename) {
 		return 0;
 	}
 
-	//llclose(fd, link_layer->role);
 	return 1;	
 
 }
@@ -243,18 +198,14 @@ int receiveFile(int fd,int port){
 
 	int packet_start, filesize;
 	char filename[100];
-	printf("receive file 1\n");
 	if(!packageControl_recieve(fd, link_layer->role, &packet_start, filename, &filesize)){
 		printf("error receiving start control packet\n");
 		return 0;
 	}
-	printf("receive file 2\n");
 	if(packet_start != CONTROL_START){
 		printf("error: expected start control packet\n");
 		return 0;
 	}
-	printf("receive file 3\n");
-	printf("FILENAME=%s\n", filename);
 	FILE* newFile = fopen(filename, "wb");
 	
 	int size_read =0; 
@@ -267,11 +218,8 @@ int receiveFile(int fd,int port){
 			printf("error receiving %d data packet\n", N);
 			return 0;
 		}
-		printf("receiveFile 1\n");
 		fwrite(filebuffer, sizeof(char), data_length , newFile);
-		printf("receiveFile 2\n");
 		size_read += data_length;
-		printf("receiveFile 3\n");
 	}
 
 	fclose(newFile);
@@ -288,10 +236,6 @@ int receiveFile(int fd,int port){
 		printf("error: expected end control packet\n");
 		return 0;
 	}
-
-
-	
-	//llclose(fd, link_layer->role);
 
 	return 1;
 

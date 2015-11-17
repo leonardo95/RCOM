@@ -32,7 +32,6 @@ int llclose_transmitter(int fd)
 	}
 	res = write(fd,disc,5);
 	stat_send_disc++;
-	printf("%d bytes written\n", res);
 	if(res != 5){
 	  if(try == 0){
 	   signal_set();
@@ -48,7 +47,6 @@ int llclose_transmitter(int fd)
 	stat_rec_disc++;
 		    
 	ua_function(ua);
-printf("%x\n", ua[0]);
 
 	res = write(fd,ua,5);
 sleep(1);
@@ -65,7 +63,6 @@ sleep(1);
 	  }
 	}
 	disconnected = TRUE;  
-	printf("%d bytes written\n", res);
     }
 
     return res;
@@ -77,7 +74,6 @@ int llclose_reciever(int fd)
     char ua[5];
     char disc[5];
     int disconnected = FALSE, try=0;
-    //ua_function(ua);
 	while(!disconnected){
 	if(try >= 3){
 		signal_stop();
@@ -100,7 +96,6 @@ int llclose_reciever(int fd)
 	    continue;
 	  }
 	}  
-    	printf("%d bytes written\n", res);
 	disconnected= TRUE;
 
     	state_machine_ua(fd, ua);	
@@ -114,19 +109,15 @@ int llclose_reciever(int fd)
 
 void disc_function(char *disc)
 {
-  printf("disc_function -> initializing\n");
     disc[0] = FLAG;
     disc[1] = A_DISC;
     disc[2] = C_DISC;
     disc[3] = BCC_DISC;
     disc[4] = FLAG;
-    printf("disc values: %x, %x, %x, %x, %x\n", disc[0],disc[1],disc[2],disc[3],disc[4]);
-    printf("disc_function -> terminated\n");
 }
 
 void state_machine_disc(int fd, char* disc)
 {
-   printf("state_machine_disc -> initializing\n");
   State state = STATE_MACHINE_START;
   int end = FALSE;
 
@@ -150,15 +141,12 @@ void state_machine_disc(int fd, char* disc)
         //printf("case: STATE_MACHINE_START1\n");
         if(c == FLAG)
         {
-          printf("state: FLAG\n");
           disc[0] = c;
           state = FLAG_RCV;
         } break;
       case FLAG_RCV:
-        printf("case: FLAG_RCV\n");
         if(c == A_DISC)
         {
-          printf("state: A\n");
           disc[1] = c;
           state = A_RCV;
         }
@@ -168,16 +156,13 @@ void state_machine_disc(int fd, char* disc)
           state = STATE_MACHINE_START;
         } break;
       case A_RCV:
-        printf("case: A_RCV\n");
         if(c == C_DISC)
         {
-          printf("state: C\n");
           disc[2] = c;
           state = C_RCV;    
         }
         else if(c == FLAG)
         {
-          printf("state: FLAG\n");
           state= FLAG_RCV;
         }
         else
@@ -186,16 +171,13 @@ void state_machine_disc(int fd, char* disc)
           state = STATE_MACHINE_START;
         } break;
       case C_RCV:
-        printf("case: C_RCV\n");
         if(c == BCC_DISC)
         {
-          printf("state: BBC\n");
           disc[3] = c;
           state = BCC_OK;
         }
         else if(c == FLAG)
         {
-          printf("state: FLAG\n");
           state= FLAG_RCV;
         }
         else
@@ -204,10 +186,8 @@ void state_machine_disc(int fd, char* disc)
           state = STATE_MACHINE_START;
         } break;
       case BCC_OK:
-      printf("case: BCC_OK\n");
         if(c == FLAG)
         {
-          printf("state: FLAG\n");
           disc[4] = c;
           state = STATE_MACHINE_STOP;       
         }
@@ -218,11 +198,9 @@ void state_machine_disc(int fd, char* disc)
         } break;
       case STATE_MACHINE_STOP: 
       end=TRUE; 
-       printf("state: STATE_MACHINE_STOP\n");
       break;
     }
   }
-  printf("state_machine -> terminated\n");
 }
 
 
