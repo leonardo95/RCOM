@@ -13,6 +13,14 @@
 #define SERVER_ADDR "192.168.28.96"
 #define FTP_SIZE 1024
 
+typedef struct URL {
+	char* username;
+	char* password;
+	char* hostname;
+	char* ip;
+	char* path;
+	char* filename;
+} url;
 
 typedef struct FTP
 {
@@ -20,3 +28,6 @@ typedef struct FTP
 } ftp;
 
 int init_clientFTP(ftp* ftp, char* ip, char* port);
+int socketConnection(char* ip, char* port);
+int serverConnection(int socket);
+int getFTP(ftp* ftp);

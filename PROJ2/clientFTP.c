@@ -3,26 +3,60 @@
 
 //inicia o FTP
 int init_clientFTP(ftp* ftp, char* ip, char* port)
-{
-	printf("socket file descriptor: %d\n", ftp->socket);
-	printf("IP: %s\n", ip);
-	printf("PORT: %s\n", port);
-	
-	int socket;
-//	char ftp_string[FTP_SIZE];
+{	
+	int socket = socketConnection(ip, port);
+	if(socket < 0)
+	{
+		printf("Error in function socketConnection\n");
+		return -1;
+	}
 
-	socket = socketConnection(ip, port);
-//	ftp_string = getFTP(ftp* ftp);
+	ftp->socket=socket;
+	
+	char ftp_string[FTP_SIZE];
+	
+	ftp_string = getFTP(ftp* ftp);
 
 	return 0;
 }
 
-//Faz a conecção ao socket - ver clientTCP.c
+//Faz a conecção ao socket
 int socketConnection(char* ip, char* port)
 {
-	int socket;
+	int res=socket(AF_INET, SOCK_STREAM, 0);
+	if(res < 0)
+	{
+		printf("Error in function socket\n");
+		return -1;
+	}
 
-	return socket;
+	int temp=serverConnection(res);
+	if(temp < 0)
+	{
+		printf("Error in function serverConnection\n");
+		return -1;
+	} 
+
+	return res;
+}
+
+//Faz a conecção ao servidor
+int serverConnection(int socket)
+{
+	struct sockaddr_in server_addr;
+	
+	bzero((char*)&server_addr,sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
+	server_addr.sin_port = htons(SERVER_PORT);
+
+	int res = connect(socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	if(res < 0)
+	{
+		printf("Error in function connect\n");
+		return -1;
+	}
+	return res;
 }
 /*
 //Retorna a string FTP
@@ -32,7 +66,7 @@ int getFTP(ftp* ftp)
 
 	return res;
 }
-
+*/
 // abrir socket para connect ao FTP
 	// login no FTP
 	// esperar resposta (replyCode), checkar e atuar
@@ -45,4 +79,3 @@ int getFTP(ftp* ftp)
 	// usar o segundo socket e ler o ficheiro atraves de packets (ler, escrever, ler, escrever)
 	// fechar os 2 sockets (close do fd). antes, mandar comando quit para primeiro
 	// terminar programa
-*/
