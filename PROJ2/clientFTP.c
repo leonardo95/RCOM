@@ -13,9 +13,9 @@ int init_clientFTP(ftp* ftp, char* ip, char* port)
 
 	ftp->socket=socket;
 	
-	char ftp_string[FTP_SIZE];
+	//char ftp_string[FTP_SIZE];
 	
-	ftp_string = getFTP(ftp* ftp);
+	//ftp_string = getFTP(ftp* ftp);
 
 	return 0;
 }
@@ -58,6 +58,36 @@ int serverConnection(int socket)
 	}
 	return res;
 }
+
+// Lê as respostas dadas pelo FTP
+int Ftp_read(int socket, char *reply)
+{
+	int read_bytes;
+
+	memset(reply, 0, READ_SIZE);
+	read_bytes = read(socket, reply, READ_SIZE);
+
+	return read_bytes;
+}
+
+// Envia um tipo de comando (USER, PASS, PASV, RETR para o servidor
+int Ftp_send(int socket, char *factor, char *type)
+{
+	char buff[50];
+	int write_bytes;
+
+	memset(buff, 0, 50);
+	strcat(buff, type);
+	strcat(buff, "-");
+	strcat(buff, factor);
+	strcat(buff, "\n");
+	
+	write_bytes = write(socket, buff, strlen(buff));
+
+	return write_bytes;
+}
+
+
 /*
 //Retorna a string FTP
 int getFTP(ftp* ftp)
