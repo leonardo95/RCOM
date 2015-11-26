@@ -1,0 +1,37 @@
+What are the ARP packets and what are they used for?
+
+	R: Address Resolution Protocol mais conhecidos como ARP packet, é um protocolo usado para encontrar um
+	endereço da camada de ligações a partir do endereço da camada de rede, ou seja, transforma ip addresses em
+	mac addresses.
+
+
+What are the MAC and IP addresses of ARP packets and why?
+
+	R: Mac corresponde ao endereço físico do router enquanto que o Ip é referente ao endereço do computador
+	cujo endereço fisico procuramos.
+
+
+What packets does the ping command generate?
+
+R: Gera os pacotes IMCP e ECHO.
+
+
+What are the MAC and IP addresses of the ping packets?
+
+	R: IP address é o do computador que queres e o MAC é o endereço do router mais próximo.
+
+
+How to determine if a receiving Ethernet frame is ARP, IP, ICMP?  
+
+	R: Através do protocol e do nex header dependendo do tipo de IP.
+
+
+How to determine the length of a receiving frame?
+
+	R: Está escrito no pacote de controlo.
+
+
+What is the loopback interface and why is it important?
+
+	R: A interface de Loopback é uma rede virtual que o computador usa para comunicar consigo próprio.
+	É usado principalmente para diagnostico e procura de erros e para conectar-se a servidores que se encontram a correr na maquina local.
