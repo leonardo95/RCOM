@@ -2,22 +2,55 @@
 
 int main(int argc, char** argv)
 {
-	if(argc != 3)
+	if(argc != 2)
 	{
 		printf("Wrong number os arguments in function main\n");
 		return -1;
 	}
 
-	char* ip = argv[1];
-	char* port = argv[2];
+	char host[STRING_SIZE];
+	char user[STRING_SIZE];
+	char password[STRING_SIZE];
+	char path[STRING_SIZE];
 
-	ftp ftp_struct;
+	// Get all the info about URL
+	Parse_Url(argv[1], user, password, host, path);
 
-	int res = init_clientFTP(&ftp_struct, ip, port);
-	if(res != 0)
-	{
-		printf("Error in function clientFTP: return value 1\n");
-		return -1;
-	}
+	printf("\nInfo Aplication Download\n\n");
+	printf("User: %s\n", user);
+	printf("Password: %s\n", password);
+	printf("Host: %s\n", host);
+	printf("Path to File: %s\n", path);
+
+	// Get IP from host
+	char Server_Address = getIP(host);
+
+	// Prepare Connection	
+	printf("Start Connection...\n\n");
+	printf("IP Address: %s\n\n", SERVER_ADDR);
+
+	// Start Connection
+	int sockfd;
+	sockfd = socketConnection(Server_Address, FTP_PORT);
+
+	// Test if connection was made
+	char reply[STRING_SIZE];
+	Ftp_read(sockfd, reply);
+
+	//Login
+	FTP_Login(sockfd, user, password);
+	
+	//Pasv mode
+	int sockfd_2 = FTP_Mode_Passive(sockfd);
+
+	//Retr mode
+	FTP_Retr(sockfd, path);
+
+	//Download File
+	FTP_Download(sockfd_2, path);
+
+	//Disconnects from server
+	FTP_disconnet(sockfd, sockfd_2);
+	
 	return 0;
 }

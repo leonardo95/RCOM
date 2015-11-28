@@ -1,17 +1,28 @@
 #include "project.h"
 
-int getIP(url* url)
+char getIP(char * host)
 {
 	struct hostent *h;
-
-	h=gethostbyname(url->hostname);
+	
+	char * buf = malloc(STRING_SIZE);
+	h=gethostbyname(host);
 	if(h == NULL)
 	{
-		printf("Error in function gethostbyname\n");
-		return -1;
+		fprintf(stderr,"Error in function gethostbyname\n");
+		exit(1);
 	}
 
-	url->ip = inet_ntoa(*((struct in_addr *)h->h_addr));
+	strcpy(buf, inet_ntoa(*((struct in_addr *)h->h_addr)));
 
-	return 0;
+	return *buf;
+}
+
+void Parse_Url(char * url, char * user, char * password, char * host, char * path)
+{
+	if (sscanf(url, "ftp://%[^:]:%[^@]@%[^/]/%s", user, password, host, path) != 4)
+	{
+		fprintf(stderr, "Invalid URL! Usage: ftp ftp://<user>:<password>@<host>/<url-path>\n");
+		exit(1);
+	}
+
 }
