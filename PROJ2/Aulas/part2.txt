@@ -1,0 +1,83 @@
+
+Fazer reboot ao router e ao switch + update image antes de começar.
+
+----------------------------------------------------------------------------------------------
+Experiência 1
+
+1-Retirar cabo da net(switch) e ligar os cabos dos respectivos tuxs.
+2-Configurar tuxy1 e tuxy4:
+	/etc/init.d/networking restart 
+	ifconfig eth0 up
+	ifconfig
+	ifconifg eth0 172.16.20.1/24 / ifconfig eht0 172.16.20.254/24
+	route add deafult gw 172.16.20.254 
+	route-n
+3-IP tuxy1:172.16.20.1
+  MAC tuxy1:00:0f:fe:8c:af:9d
+  IP tuxy4:172.16.20.254
+  MAC tuxy4:00:22:64:a6:a4:f1
+4-Testar a conectividade entre os dois pc's:
+	ping 172.16.20.254 / ping 172.16.20.1 - tuxy1 e tuxy4 respetivamente
+5-Ver as tabelas: route-n arp-a Tabelas em anexo images/arp-a(tuxy1) e images/arp-a(tuxy4)
+6-apagar entradas ARP no tuxy1 com:
+	arp -d 172.16.20.254
+7-abrir o wireshark e correr o eth0.
+8-fazer ping no tuxy1.
+9-Parar a captura de packets no wireshark
+10-Gravar o log em log/exp1.
+
+-------------------------------------------------------------------------------------------------------
+
+Experiencia 2
+
+1-Configurar o tuxy2.
+   IP:172.16.21.1/24
+   MAC:00:21:5a:61:2b:72
+2-Criar vlany0.
+   No gtkterm:
+	enable
+	configure terminal
+	vlan 20
+	end
+
+    Para as portas:
+	configure terminal
+	interface fastethernet 0/Numero da porta do tux1 e do tux4
+	switchport mode access
+	switchport access vlan x0
+	end
+	show running-config interface fastethernet 0/Numero da porta do tux1 e do tux4
+	show interfaces fasethernet 0/Numero da porta do tux1 e do tux4  switchport
+
+3-Criar vlany1.
+	Mesmos passos que o ponto 2.
+
+4- Fazer start no wireshark no tux1.
+
+5- no tux1 fazer ping para o tux4 e tux2
+
+6- parar captura e guardar logs.
+
+7- Começar novas capturas no tux1 2 e 4.
+
+8- Fazer ping -b 172.16.y0.255 no tux1
+
+9-Observar resultados, parar capturas e guardar log
+
+10- Repetir passos 7,8 e 9 mas fazer ping-b 172.16.21.255 no tux2
+
+
+-------------------------------------------------------------------------------------------------------
+
+Experiencia 3 (Pegando na experiencia 2 já configurada)
+
+1-Slide 48 ligar outro cabo - fazer ifconfig do eth1 e os echo
+
+2-MAC0:00:22:64:a6:a4:f1
+  IP:172.16.20.254
+  MAC1:00:08:54:50:3f:2c
+  IP:172.16.21.253
+
+3- configurar tux4 vlan 1 e adicionar route no 2
+
+	
