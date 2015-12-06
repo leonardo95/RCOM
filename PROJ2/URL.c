@@ -1,20 +1,18 @@
 #include "project.h"
 
-char getIP(char * host)
-{
+char* getIP(char *hostname){
+
 	struct hostent *h;
-	
-	char * buf = malloc(STRING_SIZE);
-	h=gethostbyname(host);
-	if(h == NULL)
+
+	if((h = gethostbyname(hostname)) == NULL)
 	{
-		fprintf(stderr,"Error in function gethostbyname\n");
-		exit(1);
+		herror("gethostbyname");
+		exit(2);
 	}
 
-	strcpy(buf, inet_ntoa(*((struct in_addr *)h->h_addr)));
-
-	return *buf;
+	char *ip = inet_ntoa(*((struct in_addr *)h->h_addr));
+	
+	return ip;
 }
 
 void Parse_Url(char * url, char * user, char * password, char * host, char * path)

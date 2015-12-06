@@ -1,56 +1,30 @@
 #include "project.h"
 
+// Connects to Server
+int connect_server(int port, char* addr){
 
-//inicia o FTP
-void init_clientFTP(char ip, int port)
-{	
-	int socket = socketConnection(ip, port);
-	if(socket < 0)
-	{
-		fprintf(stderr,"Error in function socketConnection\n");
-		exit(1);
-	}
-}
+	int sockfd;
+	struct	sockaddr_in server_addr;
 
-//Faz a conecção ao socket
-int socketConnection(char ip, int port)
-{
-	int res=socket(AF_INET, SOCK_STREAM, 0);
-	if(res < 0)
-	{
-		printf("Error in function socket\n");
-		return -1;
-	}
-
-	int temp=serverConnection(res);
-	if(temp < 0)
-	{
-		printf("Error in function serverConnection\n");
-		return -1;
-	} 
-
-	return res;
-}
-
-//Faz a conecção ao servidor
-int serverConnection(int socket)
-{
-	struct sockaddr_in server_addr;
-	
+	/*server address handling*/
 	bzero((char*)&server_addr,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
-	server_addr.sin_port = htons(SERVER_PORT);
+	server_addr.sin_addr.s_addr = inet_addr(addr);	/*32 bit Internet address network byte ordered*/
+	server_addr.sin_port = htons(port);		/*server TCP port must be network byte ordered */
 
-	int res = connect(socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	if(res < 0)
-	{
-		printf("Error in function connect\n");
-		return -1;
+	/*open an TCP socket*/
+	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
+		perror("socket()");
+		exit(0);
 	}
-	return res;
-}
+	/*connect to the server*/
+	if(connect(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr)) < 0){
+			perror("connect()");
+			exit(0);
+	}
 
+	return sockfd;
+}
 // Coloca o servidor em modo passivo
 int FTP_Mode_Passive(int sockfd)
 {
@@ -78,14 +52,14 @@ int FTP_Mode_Passive(int sockfd)
 	sprintf(ip,"%d.%d.%d.%d", pasv_1, pasv_2, pasv_3, pasv_4);
 	
 	// Get IP from host
-	char Server_Address = getIP(ip);
+	char* Server_Address = getIP(ip);
 
 	printf("Starts a new Connection...\n\n");
-	printf("New IP Address: %s\n\n",  &Server_Address);
+	printf("New IP Address: %s\n\n",  Server_Address);
 
 	// Connects with the new ip
 	int sockfd_2;
-	sockfd_2 = socketConnection(Server_Address, port);
+	sockfd_2 = connect_server(port, Server_Address);
 	if(sockfd_2 < 0)
 	{
 		printf("Error connecting to the new socket\n");
@@ -214,7 +188,7 @@ int FTP_Login(int sockfd, char * user, char * password)
 	if(code == FAIL_LOGIN)
 	{ 
 		printf("Failed to login. Username or password don't exist.\n");
-		return -1;
+		exit(2);
 	}
 
 	return 0;
@@ -248,15 +222,6 @@ int Ftp_send(int socket, char *factor, char *type)
 	return write_bytes;
 }
 
-/*
-//Retorna a string FTP
-int getFTP(ftp* ftp)
-{
-	char res[FTP_SIZE];
-
-	return res;
-}
-*/
 // abrir socket para connect ao FTP
 	// login no FTP
 	// esperar resposta (replyCode), checkar e atuar

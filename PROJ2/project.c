@@ -22,20 +22,17 @@ int main(int argc, char** argv)
 	printf("Host: %s\n", host);
 	printf("Path to File: %s\n", path);
 
+
 	// Get IP from host
-	char Server_Address = getIP(host);
+	char* Server_Address = getIP(host);
 
 	// Prepare Connection	
 	printf("Start Connection...\n\n");
-	printf("IP Address: %s\n\n", SERVER_ADDR);
+	printf("IP Address: %s\n\n", Server_Address);
 
-	// Start Connection
+	/// Start Connection
 	int sockfd;
-	sockfd = socketConnection(Server_Address, FTP_PORT);
-
-	// Test if connection was made
-	char reply[STRING_SIZE];
-	Ftp_read(sockfd, reply);
+	sockfd = connect_server(FTP_PORT, Server_Address);
 
 	//Login
 	FTP_Login(sockfd, user, password);
