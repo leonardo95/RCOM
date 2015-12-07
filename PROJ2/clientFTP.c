@@ -171,7 +171,7 @@ int FTP_Login(int sockfd, char * user, char * password)
 	}
 
 	//Checks password
-	if(Ftp_send(sockfd, password, "USER") < 0)
+	if(Ftp_send(sockfd, password, "PASS") < 0)
 	{
 		printf("Error sending password information\n");
 		return -1;
@@ -213,9 +213,9 @@ int Ftp_send(int socket, char *factor, char *type)
 
 	memset(buff, 0, 50);
 	strcat(buff, type);
-	strcat(buff, "-");
+	strcat(buff, " ");
 	strcat(buff, factor);
-	strcat(buff, "\n");
+	strcat(buff, "\r\n");
 	
 	write_bytes = write(socket, buff, strlen(buff));
 

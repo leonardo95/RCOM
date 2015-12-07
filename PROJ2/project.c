@@ -33,7 +33,8 @@ int main(int argc, char** argv)
 	/// Start Connection
 	int sockfd;
 	sockfd = connect_server(FTP_PORT, Server_Address);
-
+	
+	printf("Login...\n\n");
 	//Login
 	FTP_Login(sockfd, user, password);
 	
