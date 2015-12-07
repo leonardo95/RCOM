@@ -35,9 +35,14 @@ int main(int argc, char** argv)
 	sockfd = connect_server(FTP_PORT, Server_Address);
 	
 	printf("Login...\n\n");
+	
+	char reply[STRING_SIZE];
+
+	Ftp_read(sockfd, reply);
 	//Login
 	FTP_Login(sockfd, user, password);
 	
+	printf("Enter Pasv mode...\n\n");
 	//Pasv mode
 	int sockfd_2 = FTP_Mode_Passive(sockfd);
 

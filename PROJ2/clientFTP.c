@@ -6,13 +6,12 @@ int connect_server(int port, char* addr){
 	int sockfd;
 	struct	sockaddr_in server_addr;
 
-	/*server address handling*/
+	/*server handler address*/
 	bzero((char*)&server_addr,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(addr);	/*32 bit Internet address network byte ordered*/
-	server_addr.sin_port = htons(port);		/*server TCP port must be network byte ordered */
+	server_addr.sin_addr.s_addr = inet_addr(addr);	
+	server_addr.sin_port = htons(port);		
 
-	/*open an TCP socket*/
 	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
 		perror("socket()");
 		exit(0);
@@ -37,21 +36,25 @@ int FTP_Mode_Passive(int sockfd)
 		printf("Error sending pasv to server\n");
 		return -1;
 	}
+	
 	//Reads from the server
 	if(Ftp_read(sockfd, reply) < 0)
 	{
 		printf("Error while receiving answer from pasv information \n");
 		return -1;
 	}
+	printf("Response: %s\n", reply);
 
 	sscanf(reply, "%*[^(](%d,%d,%d,%d,%d,%d)\n", &pasv_1, &pasv_2, &pasv_3, &pasv_4, &pasv_5, &pasv_6);
 
-	char ip[15];
+	char ip[256];
 	int port = pasv_5*256 + pasv_6;
 	
 	sprintf(ip,"%d.%d.%d.%d", pasv_1, pasv_2, pasv_3, pasv_4);
 	
 	// Get IP from host
+
+	printf("New IP Address: %s\n\n", ip);
 	char* Server_Address = getIP(ip);
 
 	printf("Starts a new Connection...\n\n");
@@ -169,7 +172,7 @@ int FTP_Login(int sockfd, char * user, char * password)
 		printf("Error while receiving answer from user information \n");
 		return -1;
 	}
-
+	
 	//Checks password
 	if(Ftp_send(sockfd, password, "PASS") < 0)
 	{
@@ -201,6 +204,7 @@ int Ftp_read(int socket, char *reply)
 
 	memset(reply, 0, STRING_SIZE);
 	read_bytes = read(socket, reply, STRING_SIZE);
+	printf("Reply: %s\n", reply);
 
 	return read_bytes;
 }
@@ -216,21 +220,11 @@ int Ftp_send(int socket, char *factor, char *type)
 	strcat(buff, " ");
 	strcat(buff, factor);
 	strcat(buff, "\r\n");
+
+	printf("Element sent: %s\n", buff);
 	
 	write_bytes = write(socket, buff, strlen(buff));
 
 	return write_bytes;
 }
 
-// abrir socket para connect ao FTP
-	// login no FTP
-	// esperar resposta (replyCode), checkar e atuar
-	// se der erro, terminar socket, terminar programa
-	
-	// entrar em modo passivo, calcular os últimos 2 bytes (penultimo * 256 + ultimo)
-	// os primeiros 4 bytes serão o ip do segundo socket, que servirá para fazer download
-	// abrir socket e guardar
-	// pedir ficheiro ao FTP atraves do primeiro socket
-	// usar o segundo socket e ler o ficheiro atraves de packets (ler, escrever, ler, escrever)
-	// fechar os 2 sockets (close do fd). antes, mandar comando quit para primeiro
-	// terminar programa
