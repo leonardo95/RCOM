@@ -57,7 +57,7 @@ int FTP_Mode_Passive(int sockfd)
 	printf("New IP Address: %s\n\n", ip);
 	char* Server_Address = getIP(ip);
 
-	printf("Starts a new Connection...\n\n");
+	printf("\nStarts a new Connection...\n\n");
 	printf("New IP Address: %s\n\n",  Server_Address);
 
 	// Connects with the new ip

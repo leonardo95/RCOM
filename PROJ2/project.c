@@ -16,6 +16,7 @@ int main(int argc, char** argv)
 	// Get all the info about URL
 	Parse_Url(argv[1], user, password, host, path);
 
+
 	printf("\nInfo Aplication Download\n\n");
 	printf("User: %s\n", user);
 	printf("Password: %s\n", password);
@@ -27,14 +28,16 @@ int main(int argc, char** argv)
 	char* Server_Address = getIP(host);
 
 	// Prepare Connection	
-	printf("Start Connection...\n\n");
+	printf("\nStart Connection...\n\n"); 		
 	printf("IP Address: %s\n\n", Server_Address);
 
 	/// Start Connection
 	int sockfd;
 	sockfd = connect_server(FTP_PORT, Server_Address);
 	
-	printf("Login...\n\n");
+	printf("Login...\n");
+
+	check_Pass_User(password, user);
 	
 	char reply[STRING_SIZE];
 
@@ -42,7 +45,7 @@ int main(int argc, char** argv)
 	//Login
 	FTP_Login(sockfd, user, password);
 	
-	printf("Enter Pasv mode...\n\n");
+	printf("\nEnter Pasv mode...\n\n");
 	//Pasv mode
 	int sockfd_2 = FTP_Mode_Passive(sockfd);
 

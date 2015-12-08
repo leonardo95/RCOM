@@ -15,6 +15,7 @@
 #define FAIL_LOGIN 530
 
 int connect_server(int port, char* addr);
+void check_Pass_User(char * pass, char * user);
 int FTP_Login(int sockfd, char * user, char * password);
 int FTP_disconnet(int sockfd_1, int sockfd_2);
 int FTP_Mode_Passive(int sockfd);
