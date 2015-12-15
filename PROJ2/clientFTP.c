@@ -43,8 +43,6 @@ int FTP_Mode_Passive(int sockfd)
 		printf("Error while receiving answer from pasv information \n");
 		return -1;
 	}
-	printf("Response: %s\n", reply);
-
 	sscanf(reply, "%*[^(](%d,%d,%d,%d,%d,%d)\n", &pasv_1, &pasv_2, &pasv_3, &pasv_4, &pasv_5, &pasv_6);
 
 	char ip[256];
@@ -53,7 +51,6 @@ int FTP_Mode_Passive(int sockfd)
 	sprintf(ip,"%d.%d.%d.%d", pasv_1, pasv_2, pasv_3, pasv_4);
 	
 	// Get IP from host
-
 	printf("New IP Address: %s\n\n", ip);
 	char* Server_Address = getIP(ip);
 
@@ -110,7 +107,7 @@ int FTP_Download(int sockfd, char * path)
 
 	fclose(file_download);
 	
-	printf("New File received successfuly!!!\n");
+	printf("New File received successfuly!!!\n\n");
 
 	return 0;
 
@@ -118,12 +115,35 @@ int FTP_Download(int sockfd, char * path)
 
 int FTP_disconnet(int sockfd_1, int sockfd_2)
 {
-	if(close(sockfd_1) < 0){
+	char reply[STRING_SIZE];
+
+	if(Ftp_read(sockfd_1, reply) < 0)
+	{
+		printf("Error after receiveing file\n");
+		return -1;
+	}
+
+	if(Ftp_send(sockfd_1, "quit", "QUIT") < 0)
+	{
+		printf("Error in sending quit command\n");
+		return -1;
+	}
+
+	if(Ftp_read(sockfd_1, reply) < 0)
+	{
+		printf("Error on disconnecing from server\n");
+		return -1;
+	}
+
+
+	if(close(sockfd_1) < 0)
+	{
 		printf("Failed to close ftp socket 1.\n");
 		return -1;
 	}
 
-	if(close(sockfd_2) < 0){
+	if(close(sockfd_2) < 0)
+	{
 		printf("Failed to close ftp socket 2.\n");
 		return -1;
 	}
